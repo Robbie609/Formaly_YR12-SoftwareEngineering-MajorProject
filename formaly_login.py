@@ -187,11 +187,11 @@ class FormalyApp(tk.Tk):
         header.pack(fill=tk.X)
         header.pack_propagate(False)
         
-        tk.Label(header, text=f"Welcome, {username}", font=("Calibri", 18, "bold"), bg="#111111", fg="white").pack(side=tk.LEFT, padx=30)
-        tk.Label(header, text=f"{role} Portal", font=("Calibri", 12), bg="#111111", fg=FG_PRIMARY).pack(side=tk.LEFT, padx=10)
+        tk.Label(header, text=f"Welcome, {username}", font=("Calibri", 20, "bold"), bg="#111111", fg="white").pack(side=tk.LEFT, padx=20)
+        tk.Label(header, text=f"{role} Portal", font=("Calibri", 18), bg="#111111", fg=FG_PRIMARY).pack(side=tk.LEFT, padx=10)
         
         tk.Button(
-            header, text="Log Out", font=("Calibri", 10), bg=BG_SECONDARY, fg="white", 
+            header, text="Log Out", font=("Calibri", 20), bg=BG_SECONDARY, fg="white", 
             relief="flat", cursor="hand2", command=self.logout
         ).pack(side=tk.RIGHT, padx=30)
 
