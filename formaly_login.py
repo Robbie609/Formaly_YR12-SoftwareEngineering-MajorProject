@@ -1,3 +1,5 @@
+from tkinter import PhotoImage
+import tkinter as tk
 from email.mime import image
 import tkinter as tk
 from tkinter import messagebox
@@ -67,9 +69,12 @@ class FormalyApp(tk.Tk):
         right_panel.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=40, pady=40)
         
         # Branding Content
-        tk.Label(left_panel, text="Formaly", font=("Montserrat", 28, "bold"), bg="#111111", fg=FG_PRIMARY).pack(pady=(120, 10))
-        tk.Label(left_panel, image="Logo.png").pack()
-        
+        tk.Label(left_panel, text="Formaly", font=("Montserrat", 28, "bold"), bg="#111111", fg=FG_PRIMARY).pack(pady=(36, 10))
+        logo_img = PhotoImage(file=r"C:\Users\2rm2j\Documents\Software\Project\Formaly_YR12-SoftwareEngineering-MajorProject\Logo.png")
+        tk.Label(left_panel, image=logo_img, bg="#111111").pack()
+
+# Keep a reference so Python doesn't garbage-collect the image
+        left_panel.logo_img = logo_img
         # Form Content
         tk.Label(right_panel, text="Authenticate", font=("Calibri", 20, "bold"), bg=BG_COLOR, fg="white").pack(anchor="w", pady=(20, 20))
         
