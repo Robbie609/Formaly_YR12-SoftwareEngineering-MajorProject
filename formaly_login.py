@@ -16,12 +16,12 @@ BG_ENTRY = "#0A0A0A"
 ROLES = ["Student Planner", "Support Staff", "Administrator"]
 
 # Passwords hashed with SHA-256 for 'ebhs111'
-PASSWORD_HASH = hashlib.sha256("ebhs111".encode()).hexdigest()
+PASSWORD_HASH = hashlib.sha256("EBHS".encode()).hexdigest()
 
 VALID_ACCOUNTS = {
-    "Student Planner": {"username": "Rigved", "password_hash": PASSWORD_HASH},
-    "Support Staff": {"username": "Ashaz", "password_hash": PASSWORD_HASH},
-    "Administrator": {"username": "Rowan", "password_hash": PASSWORD_HASH}
+    "Student Planner": {"username": "Rowan", "password_hash": PASSWORD_HASH},
+    "Support Staff": {"username": "Rigved", "password_hash": PASSWORD_HASH},
+    "Administrator": {"username": "Schadel", "password_hash": PASSWORD_HASH}
 }
 
 PERMISSIONS = {
@@ -42,10 +42,10 @@ PERMISSIONS = {
 class FormalyApp(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("Formaly - Secure Login")
-        self.geometry("900x500")
+        self.title("Formaly - Login")
+        self.geometry("900x600")
         self.configure(bg=BG_COLOR)
-        self.resizable(False, False)
+        self.resizable(True, True)
         
         # Center window
         self.eval('tk::PlaceWindow . center')
@@ -76,7 +76,7 @@ class FormalyApp(tk.Tk):
 # Keep a reference so Python doesn't garbage-collect the image
         left_panel.logo_img = logo_img
         # Form Content
-        tk.Label(right_panel, text="Authenticate", font=("Calibri", 20, "bold"), bg=BG_COLOR, fg="white").pack(anchor="w", pady=(20, 20))
+        tk.Label(right_panel, text="WELCOME BACK!", font=("Calibri", 20, "bold"), bg=BG_COLOR, fg="white").pack(anchor="w", pady=(20, 20))
         
         # Role Selector
         tk.Label(right_panel, text="SELECT ROLE", font=("Calibri", 10, "bold"), bg=BG_COLOR, fg=FG_SECONDARY).pack(anchor="w")
@@ -99,13 +99,13 @@ class FormalyApp(tk.Tk):
             btn.bind("<Enter>", lambda e, b=btn, r=role: self.on_btn_hover(b, r))
             btn.bind("<Leave>", lambda e, b=btn, r=role: self.on_btn_leave(b, r))
             
-        # Username
+# Username
         tk.Label(right_panel, text="USERNAME", font=("Calibri", 16, "bold"), bg=BG_COLOR, fg=FG_SECONDARY).pack(anchor="nw")
         self.username_entry = tk.Entry(right_panel, font=("Calibri", 12), bg=BG_ENTRY, fg="white", insertbackground=FG_PRIMARY, relief="flat")
-        self.username_entry.pack(fill=tk.X, pady=(5, 15), ipady=8)
+        self.username_entry.pack(fill=tk.X, pady=(5, 15), ipadx=100, ipady=8)
         self.username_entry.bind("<FocusIn>", lambda e: self.on_focus(self.username_entry))
         self.username_entry.bind("<FocusOut>", lambda e: self.on_focus_out(self.username_entry))
-        
+
         # Password
         tk.Label(right_panel, text="PASSWORD", font=("Calibri", 16, "bold"), bg=BG_COLOR, fg=FG_SECONDARY).pack(anchor="w")
         self.password_entry = tk.Entry(right_panel, font=("Calibri", 12), bg=BG_ENTRY, fg="white", insertbackground=FG_PRIMARY, relief="flat", show="**")
@@ -115,7 +115,7 @@ class FormalyApp(tk.Tk):
         
         # Login Button
         self.login_btn = tk.Button(
-            right_panel, text="Establish Connection", font=("Montserrat", 14, "bold"),
+            right_panel, text="LOG IN", font=("Montserrat", 14, "bold"),
             bg=FG_PRIMARY, fg=BG_COLOR, relief="flat", cursor="hand2", command=self.handle_login
         )
         self.login_btn.pack(fill=tk.X, ipady=10)
