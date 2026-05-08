@@ -1,3 +1,4 @@
+from email.mime import image
 import tkinter as tk
 from tkinter import messagebox
 import hashlib
@@ -67,7 +68,7 @@ class FormalyApp(tk.Tk):
         
         # Branding Content
         tk.Label(left_panel, text="Formaly", font=("Montserrat", 28, "bold"), bg="#111111", fg=FG_PRIMARY).pack(pady=(120, 10))
-        tk.Label(left_panel, text="Authentication", font=("Montserrat", 14), bg="#111111", fg=FG_SECONDARY).pack()
+        tk.Label(left_panel, image="Logo.png").pack()
         
         # Form Content
         tk.Label(right_panel, text="Authenticate", font=("Calibri", 20, "bold"), bg=BG_COLOR, fg="white").pack(anchor="w", pady=(20, 20))
