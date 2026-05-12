@@ -1,8 +1,5 @@
-from tkinter import PhotoImage
 import tkinter as tk
-from email.mime import image
-import tkinter as tk
-from tkinter import messagebox
+import email.mime
 import hashlib
 import time
 
@@ -15,23 +12,24 @@ BG_ENTRY = "#0A0A0A"
 
 ROLES = ["Student Planner", "Support Staff", "Administrator"]
 
-# Passwords hashed with SHA-256 for 'ebhs111'
-PASSWORD_HASH = hashlib.sha256("EBHS".encode()).hexdigest()
-
+# Passwords hashed with SHA-256 for 'EBHS'
+password_student = hashlib.sha256("EBHSPlanner".encode()).hexdigest()
+password_support = hashlib.sha256("EBHSHelper".encode()).hexdigest()
+password_admin = hashlib.sha256("EBHSAdmin".encode()).hexdigest()
 VALID_ACCOUNTS = {
-    "Student Planner": {"username": "Rowan", "password_hash": PASSWORD_HASH},
-    "Support Staff": {"username": "Rigved", "password_hash": PASSWORD_HASH},
-    "Administrator": {"username": "Schadel", "password_hash": PASSWORD_HASH}
+    "Student Planner": {"username": "Rowan", "password_hash": password_student},
+    "Support Staff": {"username": "Rigved", "password_hash": password_support},
+    "Administrator": {"username": "Schadel", "password_hash": password_admin}
 }
 
 PERMISSIONS = {
     "Student Planner": {
         "View Records": True, "Create Records": False, "Edit Records": False,
-        "Delete Records": False, "Finalise": False, "Send Invites": False
+        "Delete Records": False, "Finalise": False, "Send Invites": True
     },
     "Support Staff": {
         "View Records": True, "Create Records": True, "Edit Records": True,
-        "Delete Records": False, "Finalise": False, "Send Invites": True
+        "Delete Records": False, "Finalise": False, "Send Invites": False
     },
     "Administrator": {
         "View Records": True, "Create Records": True, "Edit Records": True,
@@ -70,7 +68,7 @@ class FormalyApp(tk.Tk):
         
         # Branding Content
         tk.Label(left_panel, text="Formaly", font=("Montserrat", 28, "bold"), bg="#111111", fg=FG_PRIMARY).pack(pady=(36, 10))
-        logo_img = PhotoImage(file=r"C:\Users\2rm2j\Documents\Software\Project\Formaly_YR12-SoftwareEngineering-MajorProject\Logo.png")
+        logo_img = tk.PhotoImage(file=r"C:\Users\2rm2j\Documents\Software\Project\Formaly_YR12-SoftwareEngineering-MajorProject\Logo.png")
         tk.Label(left_panel, image=logo_img, bg="#111111").pack()
 
 # Keep a reference so Python doesn't garbage-collect the image
