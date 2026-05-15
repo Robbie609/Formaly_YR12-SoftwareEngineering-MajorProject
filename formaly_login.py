@@ -1,12 +1,7 @@
 import tkinter as tk
 import hashlib
 import time
-import sqlite3
-con = sqlite3.connect("Authentication.db")
-cur = con.cursor()
-cur.execute("CREATE TABLE Credentials(Member_ID, Username, Password_hashed, Email, School, Event_Name)")
-res = cur.execute("SELECT Username FROM Credentials")
-res.fetchone()
+import sqlite3 as sql
 
 # --- Configuration & Mock Data ---
 BG_COLOR = "#0B0B0B"
@@ -92,7 +87,7 @@ class FormalyApp(tk.Tk):
     def shake_window(self):
         original_x = self.winfo_x()
         original_y = self.winfo_y()
-        offsets = [-10, 10, -10, 10, -5, 5, 0]
+        offsets = [-20, 20, -20, 20, -10, 10, 5]
 
         for offset in offsets:
             self.geometry(f"+{original_x + offset}+{original_y}")
@@ -105,16 +100,17 @@ class FormalyApp(tk.Tk):
 
     def evaluate_password_strength(self, password):
         score = 0
-        if len(password) >= 8:
+        if len(password) >= 9:
             score += 1
         if any(c.isdigit() for c in password):
             score += 1
         if any(c in "!@#$%^&*()-_=+[]{};:,.<>?/\\|" for c in password):
             score += 1
-
-        if score <= 1:
+        if any(c in "ABCDEFGHIKLMNOPQRSTUWXYZ" for c in password):
+            score +=1
+        if score <= 2:
             return "Weak", "#FF4C4C"
-        elif score == 2:
+        elif score == 3:
             return "Medium", "#FFB84C"
         else:
             return "Strong", "#4CFF72"
@@ -153,7 +149,7 @@ class FormalyApp(tk.Tk):
 
         # Right Panel
         right_panel = tk.Frame(self.container, bg=BG_COLOR)
-        right_panel.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=40, pady=40)
+        right_panel.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=40, pady=30)
 
         tk.Label(right_panel, text="WELCOME BACK!", font=("Calibri", 20, "bold"),
                  bg=BG_COLOR, fg="white").pack(anchor="w", pady=(20, 20))
@@ -217,7 +213,7 @@ class FormalyApp(tk.Tk):
         nav_frame.pack(pady=(15, 0))
 
         tk.Label(nav_frame, text="Don't have an account?",
-                 font=("Calibri", 10), bg=BG_COLOR, fg=FG_SECONDARY).pack(side=tk.LEFT)
+                 font=("Calibri", 14), bg=BG_COLOR, fg=FG_SECONDARY).pack(side=tk.LEFT)
 
         signup_btn = tk.Button(
             nav_frame, text="Sign up here", font=("Calibri", 10, "underline"),
