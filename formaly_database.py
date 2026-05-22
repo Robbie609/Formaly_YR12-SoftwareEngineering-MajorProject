@@ -1,32 +1,31 @@
 import sqlite3
+import hashlib
 
-def create_accounts_table():
-    # Connect to the database file
-    conn = sqlite3.connect('formal.db')
-    cursor = conn.cursor()
+# Connect to database
+con = sqlite3.connect("formaly.db")
+cur = con.cursor()
 
-    # Define the accounts table schema
-    create_table_sql = """
-    CREATE TABLE IF NOT EXISTS accounts (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        Username TEXT NOT NULL UNIQUE,
-        password_hash TEXT NOT NULL,
-        school TEXT NOT NULL,
-        formal_name TEXT,
-        role TEXT NOT NULL CHECK (role IN ('admin', 'planner', 'helper'))
-    );
-    """
+# Password
+password = "EppingFormal26ADMIN"
 
-    try:
-        # Execute and save changes
-        cursor.execute(create_table_sql)
-        conn.commit()
-        print("Table 'accounts' created successfully in formal.db")
-    except sqlite3.Error as e:
-        print(f"An error occurred: {e}")
-    finally:
-        # Close connection
-        conn.close()
+# Hash password
+password_hashed = hashlib.sha256(password.encode()).hexdigest()
 
-if __name__ == '__main__':
-    create_accounts_table()
+# Insert new admin account
+cur.execute("""
+INSERT INTO Accounts
+(Username, Password_Hashed, School, Formal_Name, Role)
+VALUES (?, ?, ?, ?, ?)
+""", (
+    "Calvin",
+    password_hashed,
+    "Epping Boys High School",
+    "EppingFormal2026",
+    "admin"
+))
+
+con.commit()
+
+print("Calvin admin account created successfully!")
+
+con.close()
