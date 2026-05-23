@@ -1,7 +1,9 @@
 import tkinter as tk
 from tkinter import messagebox, ttk
-import formaly_database
+import subprocess
+import os
 
+import formaly_database
 formaly_database.init_db()
 
 # --- EXACT COLOR PALETTE ---
@@ -19,33 +21,63 @@ FONT_H1 = ("Segoe UI", 22, "bold")
 FONT_SMALL = ("Segoe UI", 9)
 
 class HoverButton(tk.Frame):
-    """Custom button with smooth background hover effects."""
-    def __init__(self, parent, text, command=None, bg=BG_SECONDARY, fg=FG_SECONDARY, hover_bg="#2A2A2A", font=FONT_MAIN, width=None, pad_y=10, **kwargs):
+    """Enhanced hover button with stronger visual lift + glow-like effect."""
+    def __init__(self, parent, text, command=None,
+                 bg=BG_SECONDARY, fg=FG_SECONDARY,
+                 hover_bg="#3A3A3A", hover_fg="white",
+                 font=FONT_MAIN, width=None, pad_y=10, **kwargs):
+        
         super().__init__(parent, bg=bg, cursor="hand2", **kwargs)
+
         self.command = command
         self.bg = bg
         self.hover_bg = hover_bg
-        
-        self.lbl = tk.Label(self, text=text, bg=bg, fg=fg, font=font)
+        self.hover_fg = hover_fg
+        self.normal_fg = fg
+
+        self.is_hover = False
+
+        self.lbl = tk.Label(
+            self,
+            text=text,
+            bg=bg,
+            fg=fg,
+            font=font
+        )
+
         if width:
             self.lbl.config(width=width, anchor="w")
+
         self.lbl.pack(pady=pad_y, padx=20, fill="x", expand=True)
-        
-        self.bind("<Enter>", self.on_enter)
-        self.bind("<Leave>", self.on_leave)
-        self.lbl.bind("<Enter>", self.on_enter)
-        self.lbl.bind("<Leave>", self.on_leave)
-        
-        self.bind("<Button-1>", self.on_click)
-        self.lbl.bind("<Button-1>", self.on_click)
+
+        # bindings
+        for w in (self, self.lbl):
+            w.bind("<Enter>", self.on_enter)
+            w.bind("<Leave>", self.on_leave)
+            w.bind("<Button-1>", self.on_click)
 
     def on_enter(self, e):
+        self.is_hover = True
         self.config(bg=self.hover_bg)
-        self.lbl.config(bg=self.hover_bg)
+        self.lbl.config(
+            bg=self.hover_bg,
+            fg=self.hover_fg,
+            font=(self.lbl.cget("font").split()[0], 11, "bold")
+        )
+
+        # subtle "lift" effect
+        self.lbl.pack_configure(pady=12)
 
     def on_leave(self, e):
+        self.is_hover = False
         self.config(bg=self.bg)
-        self.lbl.config(bg=self.bg)
+        self.lbl.config(
+            bg=self.bg,
+            fg=self.normal_fg,
+            font=FONT_MAIN
+        )
+
+        self.lbl.pack_configure(pady=10)
 
     def on_click(self, e):
         if self.command:
@@ -66,7 +98,6 @@ class TaskModal(tk.Toplevel):
         self.transient(parent)
         self.grab_set()
         
-        # Center the window
         x = parent.winfo_x() + (parent.winfo_width() // 2) - 225
         y = parent.winfo_y() + (parent.winfo_height() // 2) - 325
         self.geometry(f"+{x}+{y}")
@@ -74,11 +105,9 @@ class TaskModal(tk.Toplevel):
         self.build_ui()
 
     def build_ui(self):
-        # Header
         lbl_title = tk.Label(self, text="Edit Task" if self.task else "Add Task", bg=BG_SECONDARY, fg=FG_PRIMARY, font=FONT_TITLE)
         lbl_title.pack(pady=(20, 15), anchor="w", padx=30)
 
-        # Helper for creating form rows
         def create_entry(label_text, is_text_area=False):
             tk.Label(self, text=label_text, bg=BG_SECONDARY, fg=FG_SECONDARY, font=FONT_BOLD).pack(anchor="w", padx=30, pady=(5,0))
             if is_text_area:
@@ -95,7 +124,6 @@ class TaskModal(tk.Toplevel):
         self.due_date_entry = create_entry("Due Date (YYYY-MM-DD):")
         self.section_entry = create_entry("Assigned Section (e.g. Admin, Helpers):")
 
-        # Priority Selection
         tk.Label(self, text="Priority:", bg=BG_SECONDARY, fg=FG_SECONDARY, font=FONT_BOLD).pack(anchor="w", padx=30, pady=(10,0))
         self.priority_var = tk.StringVar(value="Medium")
         prio_frame = tk.Frame(self, bg=BG_SECONDARY)
@@ -106,7 +134,6 @@ class TaskModal(tk.Toplevel):
                                 selectcolor=BG_ENTRY, activebackground=BG_SECONDARY, activeforeground=FG_PRIMARY, font=FONT_MAIN)
             rb.pack(side="left", padx=(0, 10))
 
-        # Pre-fill data if editing
         if self.task:
             self.title_entry.insert(0, self.task['title'])
             self.desc_entry.insert("1.0", self.task['description'])
@@ -115,7 +142,6 @@ class TaskModal(tk.Toplevel):
             self.section_entry.insert(0, self.task['assigned_section'] or "")
             self.priority_var.set(self.task['priority'])
 
-        # Save Button
         btn_save = HoverButton(self, "Save Task", command=self.save_task, bg=FG_PRIMARY, fg=BG_COLOR, hover_bg="#E5BA3D", font=FONT_BOLD)
         btn_save.pack(pady=20, padx=30, fill="x")
 
@@ -144,16 +170,17 @@ class FormalyAdminApp(tk.Tk):
     def __init__(self):
         super().__init__()
         
-        # --- APP CONFIGURATION ---
+        # --- APP CONFIGURATION & INTRO ANIMATIONS ---
         self.title("Formaly - Admin Dashboard")
-        self.geometry("900x600")
+        self.geometry("1100x700")  # Expanded canvas footprint
         self.configure(bg=BG_COLOR)
-        self.minsize(900, 600)
+        self.minsize(1000, 650)
         
-        # MOCKED ROLE CONTROL
+        # Smooth window fade-in animation
+        self.attributes("-alpha", 0.0)
+        self.fade_in(0.0)
+        
         self.current_user_role = "Administrator"
-        
-        # Sidebar State
         self.sidebar_open = False
         self.sidebar_width = 240
         self.sidebar_x = -self.sidebar_width
@@ -161,16 +188,19 @@ class FormalyAdminApp(tk.Tk):
         self.build_ui()
         self.refresh_tasks()
 
+    def fade_in(self, alpha):
+        alpha += 0.05
+        self.attributes("-alpha", alpha)
+        if alpha < 1.0:
+            self.after(15, lambda: self.fade_in(alpha))
+
     def build_ui(self):
-        # 1. Top Navbar
         self.build_navbar()
         
-        # 2. Main Content Area (Dashboard)
         self.content_frame = tk.Frame(self, bg=BG_COLOR)
         self.content_frame.pack(fill="both", expand=True)
         self.build_dashboard()
         
-        # 3. Sidebar (Floats above content)
         self.build_sidebar()
 
     def build_navbar(self):
@@ -178,19 +208,20 @@ class FormalyAdminApp(tk.Tk):
         navbar.pack(side="top", fill="x")
         navbar.pack_propagate(False)
 
-        # Hamburger Menu
-        self.btn_menu = tk.Label(navbar, text="☰", bg=BG_SECONDARY, fg=FG_PRIMARY, font=("Segoe UI", 20), cursor="hand2")
+        # High-end geometric hamburger menu icon
+        self.btn_menu = tk.Label(navbar, text="☰", bg=BG_SECONDARY, fg=FG_PRIMARY, font=("Segoe UI", 22), cursor="hand2")
         self.btn_menu.pack(side="left", padx=25)
         self.btn_menu.bind("<Button-1>", lambda e: self.toggle_sidebar())
         self.btn_menu.bind("<Enter>", lambda e: self.btn_menu.config(fg="white"))
         self.btn_menu.bind("<Leave>", lambda e: self.btn_menu.config(fg=FG_PRIMARY))
 
-        # Logo / Title
         tk.Label(navbar, text="Formaly", bg=BG_SECONDARY, fg="white", font=FONT_TITLE).pack(side="left", padx=10)
 
-        # Interactive Search Bar
+        # Search Bar UI wrapper
         search_frame = tk.Frame(navbar, bg=BG_ENTRY, bd=0, padx=15, pady=8)
         search_frame.pack(side="left", expand=True, padx=60)
+        
+        tk.Label(search_frame, text="⌕", bg=BG_ENTRY, fg=FG_SECONDARY, font=("Segoe UI", 14)).pack(side="left", padx=(0, 5))
         
         self.search_var = tk.StringVar()
         self.search_entry = tk.Entry(search_frame, textvariable=self.search_var, bg=BG_ENTRY, fg=FG_SECONDARY, 
@@ -215,38 +246,56 @@ class FormalyAdminApp(tk.Tk):
         self.search_entry.bind("<FocusIn>", on_search_focus_in)
         self.search_entry.bind("<FocusOut>", on_search_focus_out)
 
-        # Icons (Right)
-        profile_icon = tk.Label(navbar, text="👤", bg=BG_SECONDARY, fg=FG_SECONDARY, font=("Segoe UI", 16), cursor="hand2")
+        # Minimalist vector-style profile icons
+        profile_icon = tk.Label(navbar, text="👤", bg=BG_SECONDARY, fg=FG_SECONDARY, font=("Segoe UI", 14), cursor="hand2")
         profile_icon.pack(side="right", padx=25)
-        notif_icon = tk.Label(navbar, text="🔔", bg=BG_SECONDARY, fg=FG_SECONDARY, font=("Segoe UI", 16), cursor="hand2")
+        notif_icon = tk.Label(navbar, text="🔔", bg=BG_SECONDARY, fg=FG_SECONDARY, font=("Segoe UI", 14), cursor="hand2")
         notif_icon.pack(side="right", padx=10)
 
         for icon in (profile_icon, notif_icon):
             icon.bind("<Enter>", lambda e, w=icon: w.config(fg=FG_PRIMARY))
             icon.bind("<Leave>", lambda e, w=icon: w.config(fg=FG_SECONDARY))
 
+    def navigate_to_page(self, page_name):
+        """Python Dynamic File Router."""
+        # Convert item names to expected python script paths (e.g., 'Decor Planning' -> 'decor_planning.py')
+        filename = page_name.lower().replace(' ', '_') + ".py"
+        
+        if not os.path.exists(filename):
+            messagebox.showwarning("Routing Error", f"Target file assignment missing:\nCould not locate '{filename}' in directory.")
+            return
+
+        subprocess.Popen(["python", filename])
+        self.destroy()
+
     def build_sidebar(self):
         self.sidebar = tk.Frame(self, bg=BG_SECONDARY, width=self.sidebar_width)
-        self.sidebar.place(x=self.sidebar_x, y=65, height=535) 
+        self.sidebar.place(x=self.sidebar_x, y=65, height=635) 
 
         menu_items = [
             "Dashboard", "Budget", "Venues", "Guest Management", 
-            "Decor Planning", "Tasks", "Settings"
+            "Decor Planning", "Reports", "Settings"
         ]
 
         tk.Label(self.sidebar, text="ADMIN MENU", bg=BG_SECONDARY, fg=FG_PRIMARY, font=("Segoe UI", 10, "bold")).pack(anchor="w", padx=20, pady=(25, 10))
 
-        for i, item in enumerate(menu_items):
-            # Highlight Dashboard by default
+        for item in menu_items:
             is_active = (item == "Dashboard")
             btn = HoverButton(
-                self.sidebar, item, width=22, pad_y=12,
+                self.sidebar, item, 
+                command=lambda page=item: self.navigate_to_page(page),
+                width=22, pad_y=12,
                 fg="white" if is_active else FG_SECONDARY,
                 bg="#2A2A2A" if is_active else BG_SECONDARY
             )
             btn.pack(fill="x")
 
-        logout_btn = HoverButton(self.sidebar, "Logout", fg="#FF6B6B", width=22, pad_y=12)
+        # Explicit route for Log out link
+        logout_btn = HoverButton(
+            self.sidebar, "Log out", 
+            command=lambda: self.navigate_to_page("formaly_login"),
+            fg="#FF6B6B", width=22, pad_y=12
+        )
         logout_btn.pack(side="bottom", fill="x", pady=25)
 
     def toggle_sidebar(self):
@@ -258,7 +307,7 @@ class FormalyAdminApp(tk.Tk):
             self.sidebar_open = True
 
     def animate_sidebar(self, start_x, end_x):
-        step = 30 if end_x > start_x else -30
+        step = 40 if end_x > start_x else -40
         current_x = start_x + step
         
         if (step > 0 and current_x >= end_x) or (step < 0 and current_x <= end_x):
@@ -266,7 +315,7 @@ class FormalyAdminApp(tk.Tk):
             return
             
         self.sidebar.place(x=current_x)
-        self.after(12, lambda: self.animate_sidebar(current_x, end_x))
+        self.after(8, lambda: self.animate_sidebar(current_x, end_x))
 
     def build_dashboard(self):
         header_frame = tk.Frame(self.content_frame, bg=BG_COLOR)
@@ -278,21 +327,25 @@ class FormalyAdminApp(tk.Tk):
             add_btn = HoverButton(header_frame, "+ Add Task", command=self.open_add_task, bg=FG_PRIMARY, fg=BG_COLOR, hover_bg="#E5BA3D", font=FONT_BOLD)
             add_btn.pack(side="right")
 
-        # Scrollable Canvas
         self.canvas = tk.Canvas(self.content_frame, bg=BG_COLOR, highlightthickness=0)
         self.scrollbar = tk.Scrollbar(self.content_frame, orient="vertical", command=self.canvas.yview)
         
-        # Configure scrollbar dark theme style via ttk if needed, or hide standard border
         self.tasks_container = tk.Frame(self.canvas, bg=BG_COLOR)
+        
+        # Force container matrix to maintain two exact structural halves
+        self.tasks_container.grid_columnconfigure(0, weight=1, uniform="dashboard_grid")
+        self.tasks_container.grid_columnconfigure(1, weight=1, uniform="dashboard_grid")
+
         self.tasks_container.bind("<Configure>", lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
         
-        self.canvas.create_window((0, 0), window=self.tasks_container, anchor="nw", width=800)
+        self.canvas_window = self.canvas.create_window((0, 0), window=self.tasks_container, anchor="nw")
+        self.canvas.bind('<Configure>', lambda e: self.canvas.itemconfig(self.canvas_window, width=e.width))
+
         self.canvas.configure(yscrollcommand=self.scrollbar.set)
         
         self.canvas.pack(side="left", fill="both", expand=True, padx=(45, 0), pady=10)
         self.scrollbar.pack(side="right", fill="y", pady=10, padx=(0, 25))
         
-        # Mouse wheel scrolling
         def _on_mousewheel(event):
             self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
         self.canvas.bind_all("<MouseWheel>", _on_mousewheel)
@@ -300,97 +353,99 @@ class FormalyAdminApp(tk.Tk):
     def refresh_tasks(self):
         for widget in self.tasks_container.winfo_children():
             widget.destroy()
+            
         tasks = formaly_database.get_all_tasks()
-        for task in tasks:
-            self.create_task_card(task)
+        
+        # Staggered/Cascading Card Entrance Animation loop
+        for i, task in enumerate(tasks):
+            row = i // 2
+            col = i % 2
+            self.after(60 * i, lambda t=task, r=row, c=col: self.create_task_card(t, r, c))
 
-    def create_task_card(self, task):
-        # Determine Visual Hierarchy based on Priority and Status
+    def create_task_card(self, task, row, col):
         is_completed = task['status'] == 'Completed'
         
         if is_completed:
-            border_color = "#333333"
+            border_color = "#252525"
             prio_color = "#555555"
-            title_color = "#777777"
-            bg_color = "#151515"
+            title_color = "#666666"
+            bg_color = "#121212"
         else:
             bg_color = BG_SECONDARY
             if task['priority'] == "High":
-                border_color = FG_PRIMARY # Strongest gold accent
+                border_color = FG_PRIMARY 
                 prio_color = FG_PRIMARY
                 title_color = "white"
             elif task['priority'] == "Medium":
-                border_color = "#5A5A5A" # Softer highlight
-                prio_color = "#D4AF37" # Muted gold
+                border_color = "#444444" 
+                prio_color = "#D4AF37" 
                 title_color = "#E0E0E0"
             else:
-                border_color = BG_SECONDARY # Subtle styling
+                border_color = BG_SECONDARY 
                 prio_color = FG_SECONDARY
                 title_color = FG_SECONDARY
 
-        # Outer frame for border effect
-        card_border = tk.Frame(self.tasks_container, bg=border_color, padx=1, pady=1)
-        card_border.pack(fill="x", pady=8)
+        card_border = tk.Frame(self.tasks_container, bg=border_color, padx=2, pady=2)
+        # Structural Grid Mapping using 100% of spatial container allocations
+        card_border.grid(row=row, column=col, sticky="nsew", padx=12, pady=12)
 
-        # Inner card
-        card = tk.Frame(card_border, bg=bg_color, padx=25, pady=20)
+        card = tk.Frame(card_border, bg=bg_color, padx=20, pady=18)
         card.pack(fill="both", expand=True)
         
-        # Hover animations
         def enter_card(e, c=card):
-            if not is_completed: c.config(bg="#222222")
-        def leave_card(e, c=card): 
-            c.config(bg=bg_color)
+            if is_completed:
+                return
+            c.config(bg="#2E2E2E", highlightthickness=1, highlightbackground=FG_PRIMARY)
+        def leave_card(e, c=card):
+            c.config(bg=bg_color, highlightthickness=0)
             
         card.bind("<Enter>", enter_card)
         card.bind("<Leave>", leave_card)
 
-        # Layout Columns
-        left_col = tk.Frame(card, bg=card['bg'])
-        left_col.pack(side="left", fill="both", expand=True)
-        left_col.bind("<Enter>", enter_card)
+        top_row = tk.Frame(card, bg=card['bg'])
+        top_row.pack(fill="x")
+        top_row.bind("<Enter>", enter_card)
         
-        right_col = tk.Frame(card, bg=card['bg'])
-        right_col.pack(side="right", fill="y", anchor="center")
-        right_col.bind("<Enter>", enter_card)
+        title_font = ("Segoe UI", 14, "overstrike") if is_completed else ("Segoe UI", 14, "bold")
+        tk.Label(top_row, text=task['title'], bg=card['bg'], fg=title_color, font=title_font).pack(side="left", anchor="w")
 
-        # Content
-        title_font = ("Segoe UI", 15, "overstrike") if is_completed else ("Segoe UI", 15, "bold")
-        tk.Label(left_col, text=task['title'], bg=card['bg'], fg=title_color, font=title_font).pack(anchor="w")
+        # Action Buttons Layout (Top Right Corner of Task Cards)
+        actions_frame = tk.Frame(top_row, bg=card['bg'])
+        actions_frame.pack(side="right")
         
-        desc_color = "#555555" if is_completed else FG_SECONDARY
-        tk.Label(left_col, text=task['description'], bg=card['bg'], fg=desc_color, font=FONT_MAIN).pack(anchor="w", pady=(4, 8))
-
-        # Metadata Row (Category, Due Date, Section)
-        meta_frame = tk.Frame(left_col, bg=card['bg'])
-        meta_frame.pack(anchor="w")
-        meta_frame.bind("<Enter>", enter_card)
-        
-        tk.Label(meta_frame, text=f"🔥 {task['priority']} Priority", bg=card['bg'], fg=prio_color, font=FONT_SMALL).pack(side="left", padx=(0,15))
-        if task['category']:
-            tk.Label(meta_frame, text=f"📂 {task['category']}", bg=card['bg'], fg=desc_color, font=FONT_SMALL).pack(side="left", padx=(0,15))
-        if task['due_date']:
-            tk.Label(meta_frame, text=f"📅 {task['due_date']}", bg=card['bg'], fg=desc_color, font=FONT_SMALL).pack(side="left", padx=(0,15))
-        if task['assigned_section']:
-            tk.Label(meta_frame, text=f"👥 {task['assigned_section']}", bg=card['bg'], fg=desc_color, font=FONT_SMALL).pack(side="left")
-
-        # Action Buttons (Role-aware logic applied)
         if self.current_user_role == "Administrator":
             if not is_completed:
-                btn_complete = tk.Label(right_col, text="✔ Complete", bg=card['bg'], fg="#51CF66", font=FONT_BOLD, cursor="hand2")
-                btn_complete.pack(side="left", padx=10)
+                btn_complete = tk.Label(actions_frame, text="✔️", bg=card['bg'], fg="#51CF66", font=("Segoe UI", 14, "bold"), cursor="hand2")
+                btn_complete.pack(side="left", padx=3)
                 btn_complete.bind("<Button-1>", lambda e, tid=task['task_id']: self.mark_complete(tid))
-                btn_complete.bind("<Enter>", enter_card)
                 
-            btn_edit = tk.Label(right_col, text="✎ Edit", bg=card['bg'], fg=FG_PRIMARY, font=FONT_BOLD, cursor="hand2")
-            btn_edit.pack(side="left", padx=10)
+            btn_edit = tk.Label(actions_frame, text="✏️", bg=card['bg'], fg=FG_PRIMARY, font=("Segoe UI", 14), cursor="hand2")
+            btn_edit.pack(side="left", padx=6)
             btn_edit.bind("<Button-1>", lambda e, t=task: self.open_edit_task(t))
-            btn_edit.bind("<Enter>", enter_card)
             
-            btn_del = tk.Label(right_col, text="✖", bg=card['bg'], fg="#FF6B6B", font=FONT_BOLD, cursor="hand2")
-            btn_del.pack(side="left", padx=10)
+            btn_del = tk.Label(actions_frame, text="✖️", bg=card['bg'], fg="#FF6B6B", font=("Segoe UI", 14), cursor="hand2")
+            btn_del.pack(side="left", padx=6)
             btn_del.bind("<Button-1>", lambda e, tid=task['task_id']: self.delete_task(tid))
-            btn_del.bind("<Enter>", enter_card)
+
+        desc_color = "#555555" if is_completed else FG_SECONDARY
+        tk.Label(card, text=task['description'], bg=card['bg'], fg=desc_color, font=FONT_MAIN, wraplength=400, justify="left").pack(anchor="w", pady=(10, 15))
+
+        # Modern Horizontal Data Pill Row
+        meta_frame = tk.Frame(card, bg=card['bg'])
+        meta_frame.pack(anchor="w", fill="x")
+        meta_frame.bind("<Enter>", enter_card)
+        
+        def add_meta_pill(symbol, label_text, custom_fg):
+            lbl = tk.Label(meta_frame, text=f"{symbol}  {label_text}", bg=card['bg'], fg=custom_fg, font=FONT_SMALL)
+            lbl.pack(side="left", padx=(0, 18))
+
+        add_meta_pill("❕", f"{task['priority']}", prio_color)
+        if task['category']: 
+            add_meta_pill("📂", task['category'], desc_color)
+        if task['due_date']: 
+            add_meta_pill("🗓️", task['due_date'], desc_color)
+        if task['assigned_section']: 
+            add_meta_pill("👤", task['assigned_section'], desc_color)
 
     def open_add_task(self):
         TaskModal(self, callback=self.refresh_tasks)

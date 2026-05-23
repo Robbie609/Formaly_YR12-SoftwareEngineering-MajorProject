@@ -18,7 +18,11 @@ ROLE_MAP={
     "Support Staff":"helper",
     "Administrator":"admin"
 }
-
+DASHBOARD_MAP = {
+    "admin": "admin_dashboard.py",
+    "planner": "planner_dashboard.py",
+    "helper": "support_dashboard.py"
+}
 class FormalyApp(tk.Tk):
     def __init__(self):
         super().__init__()
@@ -233,11 +237,18 @@ class FormalyApp(tk.Tk):
             con.close()
 
             if account:
-                self.feedback_label.config(text="Login successful!",fg="#4CFF72")
+                self.feedback_label.config(text="Login successful!", fg="#4CFF72")
                 self.update()
                 time.sleep(0.6)
                 self.destroy()
-                subprocess.Popen([sys.executable,"formaly_dashboard.py"])
+
+                role_key = ROLE_MAP[selected_role]
+                dashboard_file = DASHBOARD_MAP.get(role_key)
+                
+                if dashboard_file:
+                    subprocess.Popen([sys.executable, dashboard_file])
+                else:
+                    print("No dashboard mapped for role:", role_key)
 
             else:
                 self.feedback_label.config(
