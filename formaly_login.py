@@ -29,6 +29,7 @@ class FormalyApp(tk.Tk):
         self.eval('tk::PlaceWindow . center')
         self.current_role=tk.StringVar(value=ROLES[0])
         self.container=None
+        self.iconphoto(True,tk.PhotoImage(file="Logo.png"))
         self._build_login_ui()
 
     def clear_container(self):
