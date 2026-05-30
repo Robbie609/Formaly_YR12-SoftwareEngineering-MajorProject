@@ -1,10 +1,16 @@
 import sqlite3
+import hashlib
 
 DB_PATH = "database/formaly.db"
 
 # ---------------- CONNECTION ----------------
 def connect():
     return sqlite3.connect(DB_PATH)
+
+
+# ---------------- PASSWORD HASHING ----------------
+def hash_password(password):
+    return hashlib.sha256(password.encode()).hexdigest()
 
 
 # ---------------- SETUP ----------------
@@ -37,20 +43,34 @@ def init_db():
     """)
 
     con.commit()
+
+    cur.execute("SELECT COUNT(*) FROM Accounts")
+    if cur.fetchone()[0] == 0:
+        cur.execute("INSERT INTO Accounts (Username, Password_Hashed, Role) VALUES (?, ?, ?)",
+                    ("admin", hash_password("password"), "Admin"))
+        cur.execute("INSERT INTO Accounts (Username, Password_Hashed, Role) VALUES (?, ?, ?)",
+                    ("student", hash_password("password"), "Attendee"))
+        cur.execute("INSERT INTO Accounts (Username, Password_Hashed, Role) VALUES (?, ?, ?)",
+                    ("planner", hash_password("password"), "Planner"))
+        cur.execute("INSERT INTO Accounts (Username, Password_Hashed, Role) VALUES (?, ?, ?)",
+                    ("support", hash_password("password"), "Support"))
+        con.commit()
+
     con.close()
 
 
 # ---------------- ACCOUNTS ----------------
-def get_user(username, password_hash, role):
+def get_user(username, password):
     con = connect()
     cur = con.cursor()
+
+    password_hash = hash_password(password)
 
     cur.execute("""
         SELECT * FROM Accounts
         WHERE LOWER(Username)=LOWER(?)
         AND Password_Hashed=?
-        AND Role=?
-    """, (username, password_hash, role))
+    """, (username, password_hash))
 
     user = cur.fetchone()
     con.close()
