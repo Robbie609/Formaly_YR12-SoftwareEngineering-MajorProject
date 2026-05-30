@@ -1,173 +1,175 @@
 import tkinter as tk
-from tkinter import messagebox
-
-from database.formaly_database_manager import (
-    get_all_tasks,
-    add_task,
-    update_task,
-    delete_task,
-    mark_task_complete
-)
-
 from utils.styles import *
-from utils.helpers import clear_frame, center_window
-from utils.validators import validate_task
+from utils.helpers import center_window
 
 
 class AdminDashboard(tk.Tk):
-    def __init__(self):
+    def __init__(self, user):
         super().__init__()
 
+        self.user = user
         self.title("Formaly - Admin Dashboard")
         self.configure(bg=BG)
-        self.geometry("1100x700")
+        self.geometry("1400x750")
 
-        center_window(self, 1100, 700)
+        center_window(self, 1400, 750)
 
-        self.selected_task = None
-
+        self.current_page = None
+        self.page_frame = None
         self.build_ui()
-        self.load_tasks()
 
-    # ---------------- UI ----------------
     def build_ui(self):
-        # Header
-        header = tk.Frame(self, bg=BG)
-        header.pack(fill="x", padx=20, pady=15)
+        self.columnconfigure(1, weight=1)
+        self.rowconfigure(0, weight=1)
+
+        self.build_sidebar()
+        self.build_main_area()
+
+    def build_sidebar(self):
+        sidebar = tk.Frame(self, bg=CARD, width=250)
+        sidebar.grid(row=0, column=0, sticky="nsew", padx=0, pady=0)
+        sidebar.grid_propagate(False)
+        sidebar.columnconfigure(0, weight=1)
+
+        header = tk.Frame(sidebar, bg=PRIMARY, height=80)
+        header.pack(fill="x")
+        header.pack_propagate(False)
 
         tk.Label(
             header,
-            text="Admin Dashboard - Tasks",
-            bg=BG,
-            fg="white",
-            font=TITLE
-        ).pack(side="left")
-
-        tk.Button(
-            header,
-            text="Add Task",
+            text="FORMALY",
             bg=PRIMARY,
             fg="black",
-            font=FONT_BOLD,
-            command=self.open_add_form
-        ).pack(side="right")
+            font=("Segoe UI", 16, "bold")
+        ).pack(expand=True)
 
-        # Task area
-        self.task_frame = tk.Frame(self, bg=BG)
-        self.task_frame.pack(fill="both", expand=True, padx=20, pady=10)
+        user_info = tk.Frame(sidebar, bg=CARD)
+        user_info.pack(fill="x", padx=15, pady=15)
 
-    # ---------------- LOAD TASKS ----------------
-    def load_tasks(self):
-        clear_frame(self.task_frame)
-
-        tasks = get_all_tasks()
-
-        for task in tasks:
-            self.create_task_card(task)
-
-    # ---------------- TASK CARD ----------------
-    def create_task_card(self, task):
-        card = tk.Frame(self.task_frame, bg=CARD, padx=15, pady=10)
-        card.pack(fill="x", pady=8)
-
-        title = tk.Label(
-            card,
-            text=task["title"],
+        tk.Label(
+            user_info,
+            text="Admin",
             bg=CARD,
             fg="white",
             font=FONT_BOLD
-        )
-        title.pack(anchor="w")
+        ).pack(anchor="w")
 
-        desc = tk.Label(
-            card,
-            text=task["description"],
+        tk.Label(
+            user_info,
+            text=self.user[1] if self.user else "User",
             bg=CARD,
             fg=SECONDARY,
-            font=FONT,
-            wraplength=900
+            font=SMALL
+        ).pack(anchor="w", pady=(2, 0))
+
+        pages = [
+            ("Tasks", "task"),
+            ("Approvals", "approvals"),
+            ("Budget", "budget"),
+            ("Reports", "reports"),
+            ("Attendance", "attendance"),
+            ("Venue", "venue"),
+            ("Promotion", "promotion"),
+            ("Guest", "guest"),
+            ("Feedback", "feedback"),
+        ]
+
+        nav_frame = tk.Frame(sidebar, bg=CARD)
+        nav_frame.pack(fill="both", expand=True, padx=0, pady=15)
+
+        for label, page_id in pages:
+            btn = tk.Button(
+                nav_frame,
+                text=label,
+                bg=ENTRY,
+                fg="white",
+                font=FONT,
+                border=0,
+                cursor="hand2",
+                command=lambda p=page_id: self.load_page(p),
+                anchor="w",
+                padx=15,
+                pady=10
+            )
+            btn.pack(fill="x", padx=10, pady=4)
+            btn.bind("<Enter>", lambda e, btn=btn: btn.config(bg=PRIMARY, fg="black"))
+            btn.bind("<Leave>", lambda e, btn=btn: btn.config(bg=ENTRY, fg="white"))
+
+        logout_btn = tk.Button(
+            sidebar,
+            text="Logout",
+            bg=ERROR,
+            fg="white",
+            font=FONT_BOLD,
+            border=0,
+            cursor="hand2",
+            command=self.logout,
+            padx=15,
+            pady=10
         )
-        desc.pack(anchor="w", pady=5)
+        logout_btn.pack(fill="x", padx=10, pady=10)
 
-        # Buttons
-        btns = tk.Frame(card, bg=CARD)
-        btns.pack(anchor="e", pady=5)
+    def build_main_area(self):
+        main = tk.Frame(self, bg=BG)
+        main.grid(row=0, column=1, sticky="nsew", padx=20, pady=20)
+        main.columnconfigure(0, weight=1)
+        main.rowconfigure(0, weight=1)
 
-        tk.Button(
-            btns,
-            text="Complete",
-            command=lambda t=task["task_id"]: self.complete_task(t)
-        ).pack(side="left", padx=5)
+        header = tk.Frame(main, bg=BG)
+        header.grid(row=0, column=0, sticky="ew", pady=(0, 20))
 
-        tk.Button(
-            btns,
-            text="Edit",
-            command=lambda t=task: self.edit_task(t)
-        ).pack(side="left", padx=5)
+        tk.Label(
+            header,
+            text="Admin Dashboard",
+            bg=BG,
+            fg="white",
+            font=TITLE
+        ).pack(anchor="w")
 
-        tk.Button(
-            btns,
-            text="Delete",
-            fg="red",
-            command=lambda t=task["task_id"]: self.remove_task(t)
-        ).pack(side="left", padx=5)
+        self.page_frame = tk.Frame(main, bg=CARD, relief="solid", borderwidth=1)
+        self.page_frame.grid(row=1, column=0, sticky="nsew")
+        self.page_frame.columnconfigure(0, weight=1)
+        self.page_frame.rowconfigure(0, weight=1)
 
-    # ---------------- ACTIONS ----------------
-    def open_add_form(self):
-        self.task_form()
+    def load_page(self, page_id):
+        for widget in self.page_frame.winfo_children():
+            widget.destroy()
 
-    def task_form(self, task=None):
-        popup = tk.Toplevel(self)
-        popup.title("Task Form")
-        popup.geometry("400x400")
-        popup.configure(bg=BG)
+        content = tk.Frame(self.page_frame, bg=CARD)
+        content.grid(row=0, column=0, sticky="nsew", padx=30, pady=30)
 
-        tk.Label(popup, text="Title", bg=BG, fg=SECONDARY).pack()
-        title_entry = tk.Entry(popup)
-        title_entry.pack()
+        page_titles = {
+            "task": "Task Management",
+            "approvals": "Approvals",
+            "budget": "Budget",
+            "reports": "Reports",
+            "attendance": "Attendance",
+            "venue": "Venue",
+            "promotion": "Promotion",
+            "guest": "Guest",
+            "feedback": "Feedback"
+        }
 
-        tk.Label(popup, text="Description", bg=BG, fg=SECONDARY).pack()
-        desc_entry = tk.Entry(popup)
-        desc_entry.pack()
+        title = page_titles.get(page_id, "Page")
 
-        if task:
-            title_entry.insert(0, task["title"])
-            desc_entry.insert(0, task["description"])
+        tk.Label(
+            content,
+            text=title,
+            bg=CARD,
+            fg="white",
+            font=SUBTITLE
+        ).pack(anchor="w", pady=(0, 15))
 
-        def save():
-            title = title_entry.get()
-            desc = desc_entry.get()
+        tk.Label(
+            content,
+            text=f"{title} - Coming soon",
+            bg=CARD,
+            fg=SECONDARY,
+            font=FONT
+        ).pack(anchor="w")
 
-            valid, msg = validate_task(title)
-            if not valid:
-                messagebox.showerror("Error", msg)
-                return
-
-            if task:
-                update_task(task["task_id"], title, desc, task["priority"],
-                            task["category"], task["due_date"], task["assigned_section"])
-            else:
-                add_task(title, desc, "Medium", "", "", "")
-
-            popup.destroy()
-            self.load_tasks()
-
-        tk.Button(
-            popup,
-            text="Save",
-            bg=PRIMARY,
-            command=save
-        ).pack(pady=20)
-
-    # ---------------- TASK ACTIONS ----------------
-    def complete_task(self, task_id):
-        mark_task_complete(task_id)
-        self.load_tasks()
-
-    def remove_task(self, task_id):
-        if messagebox.askyesno("Delete", "Are you sure?"):
-            delete_task(task_id)
-            self.load_tasks()
-
-    def edit_task(self, task):
-        self.task_form(task)
+    def logout(self):
+        self.destroy()
+        from pages.login.formaly_login import FormalyLoginApp
+        app = FormalyLoginApp()
+        app.mainloop()
