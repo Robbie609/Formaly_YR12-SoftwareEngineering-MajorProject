@@ -92,7 +92,7 @@ class FormalyRegisterApp(tk.Toplevel):
             bg=CARD,
             fg=SECONDARY,
             font=FONT
-        ).pack(anchor="w", pady=(0, 20))
+        ).pack(anchor="w", pady=(0, 5))
 
         self.create_field(content, "Formal Name", "formal_name")
         self.create_field(content, "Email", "email")
@@ -160,7 +160,7 @@ class FormalyRegisterApp(tk.Toplevel):
         entry.pack(fill="x", ipady=8)
 
         entry.bind("<FocusIn>", lambda e: e.widget.config(borderwidth=2))
-        entry.bind("<FocusOut>", lambda e: e.widget.config(borderwidth=1))
+        entry.bind("<FocusOut>", lambda e: e.widget.config(borderwidth=2))
 
         setattr(self, f"{field_name}_entry", entry)
 

@@ -168,7 +168,7 @@ class FormalyLoginApp(tk.Tk):
             relief="solid",
             insertbackground="white"
         )
-        self.password_entry.pack(fill="x", pady=(0, 18), ipady=9)
+        self.password_entry.pack(fill="x", pady=(0, 18), ipady=12)
         self.password_entry.bind("<FocusIn>", self.on_focus_in)
         self.password_entry.bind("<FocusOut>", self.on_focus_out)
         self.password_entry.bind("<Return>", lambda e: self.login())
@@ -290,8 +290,8 @@ class FormalyLoginApp(tk.Tk):
 
     def open_register(self):
         try:
-            from pages.login.formaly_register import FormalyRegisterApp
-            register = FormalyRegisterApp(self)
+            from pages.attendee.attendee_dashboard import FormalInvitationPage
+            register = FormalInvitationPage(self)
             self.withdraw()
         except Exception as e:
             messagebox.showerror("Error", f"Failed to open register page: {str(e)}")
