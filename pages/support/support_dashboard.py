@@ -1,153 +1,255 @@
 import tkinter as tk
+import sys
+import os
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+
+from database.formaly_database_manager import get_attendance_stats
 from utils.styles import *
-from utils.helpers import center_window
 
 
-class SupportDashboard(tk.Tk):
-    def __init__(self, user):
-        super().__init__()
-
+class SupportDashboard(tk.Frame):
+    def __init__(self, parent, controller=None, user=None):
+        super().__init__(parent, bg=BG)
+        self.controller = controller
         self.user = user
-        self.title("Formaly - Support Dashboard")
-        self.configure(bg=BG)
-        self.geometry("1400x750")
+        self.setup_ui()
 
-        center_window(self, 1400, 750)
+    # =========================
+    # UI
+    # =========================
+    def setup_ui(self):
 
-        self.page_frame = None
-        self.build_ui()
+        root = tk.Frame(self, bg=BG)
+        root.pack(fill="both", expand=True)
 
-    def build_ui(self):
-        self.columnconfigure(1, weight=1)
-        self.rowconfigure(0, weight=1)
-
-        self.build_sidebar()
-        self.build_main_area()
-
-    def build_sidebar(self):
-        sidebar = tk.Frame(self, bg=CARD, width=250)
-        sidebar.grid(row=0, column=0, sticky="nsew", padx=0, pady=0)
-        sidebar.grid_propagate(False)
-        sidebar.columnconfigure(0, weight=1)
-
-        header = tk.Frame(sidebar, bg=PRIMARY, height=80)
-        header.pack(fill="x")
-        header.pack_propagate(False)
+        # =========================
+        # SIDEBAR (ROLE SAFE)
+        # =========================
+        sidebar = tk.Frame(root, bg=CARD, width=240)
+        sidebar.pack(side="left", fill="y")
+        sidebar.pack_propagate(False)
 
         tk.Label(
-            header,
+            sidebar,
             text="FORMALY",
-            bg=PRIMARY,
-            fg="black",
-            font=("Segoe UI", 16, "bold")
-        ).pack(expand=True)
-
-        user_info = tk.Frame(sidebar, bg=CARD)
-        user_info.pack(fill="x", padx=15, pady=15)
-
-        tk.Label(
-            user_info,
-            text="Support",
             bg=CARD,
-            fg="white",
-            font=FONT_BOLD
-        ).pack(anchor="w")
+            fg=PRIMARY,
+            font=TITLE
+        ).pack(anchor="w", padx=20, pady=(25, 5))
 
         tk.Label(
-            user_info,
-            text=self.user[1] if self.user else "User",
+            sidebar,
+            text="Support Panel",
             bg=CARD,
             fg=SECONDARY,
             font=SMALL
-        ).pack(anchor="w", pady=(2, 0))
+        ).pack(anchor="w", padx=20, pady=(0, 25))
 
-        nav_frame = tk.Frame(sidebar, bg=CARD)
-        nav_frame.pack(fill="both", expand=True, padx=0, pady=15)
+        # --- NAV SAFE (SUPPORT ONLY) ---
+        self.nav_button(sidebar, "Dashboard")
+        self.nav_button(sidebar, "Attendance", self.open_attendance)
 
-        btn = tk.Button(
-            nav_frame,
-            text="Attendance",
-            bg=ENTRY,
-            fg="white",
-            font=FONT,
-            border=0,
-            cursor="hand2",
-            command=lambda: self.load_page("attendance"),
-            anchor="w",
-            padx=15,
-            pady=10
-        )
-        btn.pack(fill="x", padx=10, pady=4)
-        btn.bind("<Enter>", lambda e, btn=btn: btn.config(bg=PRIMARY, fg="black"))
-        btn.bind("<Leave>", lambda e, btn=btn: btn.config(bg=ENTRY, fg="white"))
+        # ❌ intentionally NOT included:
+        # Reports, Settings (role restriction fix)
 
-        logout_btn = tk.Button(
-            sidebar,
-            text="Logout",
-            bg=ERROR,
-            fg="white",
-            font=FONT_BOLD,
-            border=0,
-            cursor="hand2",
-            command=self.logout,
-            padx=15,
-            pady=10
-        )
-        logout_btn.pack(fill="x", padx=10, pady=10)
+        # =========================
+        # LOGOUT (IMPORTANT FIX)
+        # =========================
+        tk.Frame(sidebar, bg=BORDER, height=1).pack(fill="x", padx=15, pady=15)
 
-    def build_main_area(self):
-        main = tk.Frame(self, bg=BG)
-        main.grid(row=0, column=1, sticky="nsew", padx=20, pady=20)
-        main.columnconfigure(0, weight=1)
-        main.rowconfigure(0, weight=1)
+        self.nav_button(sidebar, "Logout", self.logout, danger=True)
 
-        header = tk.Frame(main, bg=BG)
-        header.grid(row=0, column=0, sticky="ew", pady=(0, 20))
+        # =========================
+        # MAIN AREA
+        # =========================
+        main = tk.Frame(root, bg=BG)
+        main.pack(side="left", fill="both", expand=True)
 
+        content = tk.Frame(main, bg=BG)
+        content.pack(fill="both", expand=True, padx=30, pady=25)
+
+        # =========================
+        # HEADER
+        # =========================
         tk.Label(
-            header,
+            content,
             text="Support Dashboard",
             bg=BG,
             fg="white",
             font=TITLE
         ).pack(anchor="w")
 
-        self.page_frame = tk.Frame(main, bg=CARD, relief="solid", borderwidth=1)
-        self.page_frame.grid(row=1, column=0, sticky="nsew")
-        self.page_frame.columnconfigure(0, weight=1)
-        self.page_frame.rowconfigure(0, weight=1)
-
-    def load_page(self, page_id):
-        for widget in self.page_frame.winfo_children():
-            widget.destroy()
-
-        content = tk.Frame(self.page_frame, bg=CARD)
-        content.grid(row=0, column=0, sticky="nsew", padx=30, pady=30)
-
-        page_titles = {
-            "attendance": "Attendance Management",
-        }
-
-        title = page_titles.get(page_id, "Page")
-
         tk.Label(
             content,
-            text=title,
-            bg=CARD,
-            fg="white",
-            font=SUBTITLE
-        ).pack(anchor="w", pady=(0, 15))
-
-        tk.Label(
-            content,
-            text=f"{title} - Coming soon",
-            bg=CARD,
+            text="Live attendance overview and system status",
+            bg=BG,
             fg=SECONDARY,
             font=FONT
+        ).pack(anchor="w", pady=(4, 20))
+
+        # =========================
+        # KPI CARDS (FIXED VISIBILITY)
+        # =========================
+        self.stats_frame = tk.Frame(content, bg=BG)
+        self.stats_frame.pack(fill="x", pady=(0, 25))
+
+        self.stat_vars = {
+            "total": tk.StringVar(value="0"),
+            "present": tk.StringVar(value="0"),
+            "paid": tk.StringVar(value="0"),
+            "unpaid": tk.StringVar(value="0"),
+            "plus_ones": tk.StringVar(value="0"),
+        }
+
+        stats = [
+            ("Total Attendees", "total"),
+            ("Present", "present"),
+            ("Paid", "paid"),
+            ("Unpaid", "unpaid"),
+            ("Plus Ones", "plus_ones")
+        ]
+
+        for i, (label, key) in enumerate(stats):
+            card = tk.Frame(
+                self.stats_frame,
+                bg=CARD,
+                padx=18,
+                pady=15,
+                highlightthickness=1,
+                highlightbackground=BORDER
+            )
+            card.grid(row=0, column=i, padx=10, sticky="nsew")
+
+            tk.Label(
+                card,
+                text=label,
+                bg=CARD,
+                fg=SECONDARY,
+                font=SMALL
+            ).pack(anchor="w")
+
+            # 🔥 BIG NUMBER FIX (was missing / unclear before)
+            tk.Label(
+                card,
+                textvariable=self.stat_vars[key],
+                bg=CARD,
+                fg=PRIMARY,
+                font=("Segoe UI", 22, "bold")
+            ).pack(anchor="w", pady=(8, 0))
+
+            self.stats_frame.grid_columnconfigure(i, weight=1)
+
+        # =========================
+        # ACTION PANEL
+        # =========================
+        action = tk.Frame(
+            content,
+            bg=CARD,
+            padx=20,
+            pady=18,
+            highlightthickness=1,
+            highlightbackground=BORDER
+        )
+        action.pack(fill="x")
+
+        tk.Label(
+            action,
+            text="Quick Action",
+            bg=CARD,
+            fg="white",
+            font=FONT_BOLD
         ).pack(anchor="w")
 
+        tk.Label(
+            action,
+            text="Manage attendance records and updates",
+            bg=CARD,
+            fg=SECONDARY,
+            font=SMALL
+        ).pack(anchor="w", pady=(3, 10))
+
+        btn = tk.Button(
+            action,
+            text="Open Attendance Manager →",
+            command=self.open_attendance,
+            bg=PRIMARY,
+            fg="black",
+            font=FONT_BOLD,
+            relief="flat",
+            padx=18,
+            pady=10,
+            cursor="hand2",
+            activebackground="#FFE27A"
+        )
+        btn.pack(anchor="w")
+
+        btn.bind("<Enter>", lambda e: btn.config(bg="#FFE27A"))
+        btn.bind("<Leave>", lambda e: btn.config(bg=PRIMARY))
+
+    # =========================
+    # NAV BUTTON FACTORY
+    # =========================
+    def nav_button(self, parent, text, command=None, danger=False):
+
+        def on_enter(e):
+            btn.config(bg=PRIMARY if not danger else ERROR, fg="black")
+
+        def on_leave(e):
+            btn.config(bg=ENTRY, fg="white")
+
+        btn = tk.Button(
+            parent,
+            text=text,
+            command=command,
+            bg=ENTRY,
+            fg="white",
+            font=FONT,
+            relief="flat",
+            anchor="w",
+            padx=15,
+            pady=10,
+            cursor="hand2",
+            activebackground=PRIMARY
+        )
+
+        btn.pack(fill="x", padx=15, pady=5)
+
+        btn.bind("<Enter>", on_enter)
+        btn.bind("<Leave>", on_leave)
+
+        return btn
+
+    # =========================
+    # NAVIGATION
+    # =========================
+    def open_attendance(self):
+        if self.controller and hasattr(self.controller, "show_frame"):
+            self.controller.show_frame("AttendancePage")
+
     def logout(self):
-        self.destroy()
-        from pages.login.formaly_login import FormalyLoginApp
-        app = FormalyLoginApp()
-        app.mainloop()
+        if self.controller:
+            try:
+                self.controller.destroy()
+            except:
+                pass
+
+    # =========================
+    # DATA REFRESH
+    # =========================
+    def tkraise(self, *args, **kwargs):
+        super().tkraise(*args, **kwargs)
+        self.refresh_data()
+
+    def refresh_data(self):
+        try:
+            stats = get_attendance_stats()
+
+            self.stat_vars["total"].set(stats.get("total", 0))
+            self.stat_vars["present"].set(stats.get("present", 0))
+            self.stat_vars["paid"].set(stats.get("paid", 0))
+            self.stat_vars["unpaid"].set(stats.get("unpaid", 0))
+            self.stat_vars["plus_ones"].set(stats.get("plus_ones", 0))
+
+        except Exception as e:
+            print("Dashboard load error:", e)

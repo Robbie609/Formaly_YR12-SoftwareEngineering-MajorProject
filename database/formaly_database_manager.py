@@ -42,6 +42,15 @@ def init_db():
     )
     """)
 
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS attendees (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL UNIQUE,
+        plus_one INTEGER DEFAULT 0,
+        paid INTEGER DEFAULT 0,
+        attendance INTEGER DEFAULT 0
+    )
+    """)
     con.commit()
 
     cur.execute("SELECT COUNT(*) FROM Accounts")
@@ -139,3 +148,70 @@ def mark_task_complete(task_id):
 
     con.commit()
     con.close()
+
+DB_PATH = "database/formaly.db"
+
+def get_all_attendees(search_query=""):
+    """Fetches attendees via SQLite, strictly for Tkinter Treeview."""
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    
+    if search_query:
+        c.execute("SELECT * FROM attendees WHERE name LIKE ? ORDER BY name ASC", (f"%{search_query}%",))
+    else:
+        c.execute("SELECT * FROM attendees ORDER BY name ASC")
+        
+    rows = [dict(row) for row in c.fetchall()]
+    conn.close()
+    return rows
+
+def update_attendance(student_id, status):
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("UPDATE attendees SET attendance = ? WHERE id = ?", (status, student_id))
+    conn.commit()
+    conn.close()
+
+def update_payment(student_id, status):
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("UPDATE attendees SET paid = ? WHERE id = ?", (status, student_id))
+    conn.commit()
+    conn.close()
+
+def update_plus_one(student_id, status):
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("UPDATE attendees SET plus_one = ? WHERE id = ?", (status, student_id))
+    conn.commit()
+    conn.close()
+
+def get_attendance_stats():
+    conn = sqlite3.connect("formaly.db")
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT COUNT(*) FROM attendees")
+    total = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM attendees WHERE attendance = 1")
+    present = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM attendees WHERE paid = 1")
+    paid = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM attendees WHERE paid = 0")
+    unpaid = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM attendees WHERE plus_one = 1")
+    plus_ones = cursor.fetchone()[0]
+
+    conn.close()
+
+    return {
+        "total": total,
+        "present": present,
+        "paid": paid,
+        "unpaid": unpaid,
+        "plus_ones": plus_ones
+    }

@@ -97,7 +97,7 @@ class FormalFeedbackPage(tk.Frame):
             
         tk.Label(header_frame, text="FORMAL FEEDBACK", font=SUBTITLE, bg=BG, fg=PRIMARY).pack()
         tk.Label(header_frame, text="Thank you for attending.", font=FONT, bg=BG, fg=SECONDARY).pack(pady=(PADDING_Y // 4, 0))
-        tk.Label(header_frame, text="Midnight Masquerade 2026", font=FONT_BOLD, bg=BG, fg=PRIMARY).pack(pady=(PADDING_Y // 2, 0))
+        tk.Label(header_frame, text="Epping Formal 2026", font=FONT_BOLD, bg=BG, fg=PRIMARY).pack(pady=(PADDING_Y // 2, 0))
 
     def create_overall_rating_section(self):
         """Renders the prominent main star layout interaction field."""
