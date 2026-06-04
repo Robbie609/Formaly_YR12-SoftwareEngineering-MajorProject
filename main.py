@@ -1,21 +1,15 @@
 from database.formaly_database_manager import init_db
 import tkinter as tk
-from pages.support.support_dashboard import SupportDashboard
+from pages.login.formaly_login import FormalyLoginApp
 
 
 def main():
-    # 1. Ensure database exists and tables are ready
+    # Initialize database
     init_db()
-
-    # 2. Launch support dashboard (temporary)
-    root = tk.Tk()
-    root.title("Support Dashboard - Formaly")
-
-    page = SupportDashboard(root, controller=None)
-    page.pack(fill="both", expand=True)
-
-    root.geometry("900x700")
-    root.mainloop()
+    
+    # Launch login page as entry point
+    app = FormalyLoginApp()
+    app.mainloop()
 
 
 if __name__ == "__main__":

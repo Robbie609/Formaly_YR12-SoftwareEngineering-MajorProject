@@ -254,15 +254,23 @@ class FormalyLoginApp(tk.Tk):
                 self.show_status("Invalid username or password.", ERROR)
                 return
 
-            user_role = user[5].strip().lower()
+            db_role = user[5].strip().lower()
 
-            if user_role != self.selected_role.lower():
+            # UI role → database role mapping
+            role_map = {
+                "admin": "admin",
+                "planner": "planner",
+                "support": "helper"
+            }
+
+            selected_role_db = role_map.get(self.selected_role.lower())
+            if db_role != selected_role_db:
                 self.show_status("This account is not authorized for the selected role.", ERROR)
                 return
 
             self.current_user = user
             self.show_status("Login successful!", SUCCESS)
-            self.after(500, lambda: self.open_dashboard(user_role))
+            self.after(500, lambda: self.open_dashboard(selected_role_db))
 
         except Exception as e:
             self.show_status(f"Error: {str(e)}", ERROR)
@@ -271,27 +279,28 @@ class FormalyLoginApp(tk.Tk):
         try:
             if role == "admin":
                 from pages.admin.admin_dashboard import AdminDashboard
-                dashboard = AdminDashboard(self.current_user)
+                dashboard = AdminDashboard(self, user=self.current_user)
             elif role == "planner":
                 from pages.planner.planner_dashboard import PlannerDashboard
-                dashboard = PlannerDashboard(self.current_user)
-            elif role in ["support", "helper"]:
+                dashboard = PlannerDashboard(self, user=self.current_user)
+            elif role == "helper":
                 from pages.support.support_dashboard import SupportDashboard
-                dashboard = SupportDashboard(self.current_user)
+                dashboard = SupportDashboard(self, user=self.current_user)
             else:
                 self.show_status(f"Unknown role: {role}", ERROR)
                 return
-
-            self.destroy()
-            dashboard.mainloop()
+            self.status_label.config(text="")
+            
+            dashboard.place(relwidth=1, relheight=1)
+            dashboard.lift()
 
         except Exception as e:
             self.show_status(f"Error: {str(e)}", ERROR)
 
     def open_register(self):
         try:
-            from pages.attendee.attendee_dashboard import FormalInvitationPage
-            register = FormalInvitationPage(self)
+            from pages.login.formaly_register import FormalyRegisterApp
+            register = FormalyRegisterApp(self)
             self.withdraw()
         except Exception as e:
             messagebox.showerror("Error", f"Failed to open register page: {str(e)}")

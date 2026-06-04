@@ -14,186 +14,123 @@ class SupportDashboard(tk.Frame):
         self.controller = controller
         self.user = user
         self.setup_ui()
+        print("SUPPORT DASHBOARD LOADED")
 
-    # =========================
-    # UI
-    # =========================
     def setup_ui(self):
-
         root = tk.Frame(self, bg=BG)
         root.pack(fill="both", expand=True)
 
         # =========================
-        # SIDEBAR (ROLE SAFE)
+        # SIDEBAR NAVIGATION
         # =========================
         sidebar = tk.Frame(root, bg=CARD, width=240)
         sidebar.pack(side="left", fill="y")
         sidebar.pack_propagate(False)
 
+        # Logo & Branding
         tk.Label(
             sidebar,
             text="FORMALY",
             bg=CARD,
             fg=PRIMARY,
             font=TITLE
-        ).pack(anchor="w", padx=20, pady=(25, 5))
+        ).pack(anchor="w", padx=20, pady=(30, 5))
 
         tk.Label(
             sidebar,
-            text="Support Panel",
+            text="Support",
             bg=CARD,
             fg=SECONDARY,
             font=SMALL
-        ).pack(anchor="w", padx=20, pady=(0, 25))
+        ).pack(anchor="w", padx=20, pady=(0, 30))
 
-        # --- NAV SAFE (SUPPORT ONLY) ---
-        self.nav_button(sidebar, "Dashboard")
-        self.nav_button(sidebar, "Attendance", self.open_attendance)
+        # Navigation Buttons
+        self.nav_button(sidebar, "📊 Dashboard", lambda: self.controller.show_frame("SupportDashboard") if self.controller else None)
+        self.nav_button(sidebar, "👥 Attendance", lambda: self.controller.show_frame("AttendancePage") if self.controller else None)
 
-        # ❌ intentionally NOT included:
-        # Reports, Settings (role restriction fix)
+        # Spacer
+        tk.Frame(sidebar, bg=BORDER, height=1).pack(fill="x", padx=15, pady=20)
 
-        # =========================
-        # LOGOUT (IMPORTANT FIX)
-        # =========================
-        tk.Frame(sidebar, bg=BORDER, height=1).pack(fill="x", padx=15, pady=15)
-
-        self.nav_button(sidebar, "Logout", self.logout, danger=True)
+        # Logout
+        self.nav_button(sidebar, "🚪 Logout", self.logout, danger=True)
 
         # =========================
-        # MAIN AREA
+        # MAIN CONTENT AREA
         # =========================
         main = tk.Frame(root, bg=BG)
         main.pack(side="left", fill="both", expand=True)
 
-        content = tk.Frame(main, bg=BG)
-        content.pack(fill="both", expand=True, padx=30, pady=25)
+        # Header Section
+        header = tk.Frame(main, bg=BG)
+        header.pack(fill="x", padx=40, pady=(35, 10))
 
-        # =========================
-        # HEADER
-        # =========================
         tk.Label(
-            content,
-            text="Support Dashboard",
+            header,
+            text="Dashboard Overview",
             bg=BG,
             fg="white",
             font=TITLE
         ).pack(anchor="w")
 
         tk.Label(
-            content,
-            text="Live attendance overview and system status",
+            header,
+            text="Real-time attendance metrics and system status",
             bg=BG,
             fg=SECONDARY,
             font=FONT
-        ).pack(anchor="w", pady=(4, 20))
+        ).pack(anchor="w", pady=(5, 0))
 
-        # =========================
-        # KPI CARDS (FIXED VISIBILITY)
-        # =========================
-        self.stats_frame = tk.Frame(content, bg=BG)
-        self.stats_frame.pack(fill="x", pady=(0, 25))
+        # KPI Cards Container
+        cards_frame = tk.Frame(main, bg=BG)
+        cards_frame.pack(fill="both", expand=True, padx=40, pady=(30, 40))
 
         self.stat_vars = {
             "total": tk.StringVar(value="0"),
             "present": tk.StringVar(value="0"),
-            "paid": tk.StringVar(value="0"),
-            "unpaid": tk.StringVar(value="0"),
             "plus_ones": tk.StringVar(value="0"),
         }
 
+        # Stats configuration: (label, key, color_accent)
         stats = [
-            ("Total Attendees", "total"),
-            ("Present", "present"),
-            ("Paid", "paid"),
-            ("Unpaid", "unpaid"),
-            ("Plus Ones", "plus_ones")
+            ("Total Attendees", "total", PRIMARY),
+            ("Currently Present", "present", SUCCESS),
+            ("Plus Ones", "plus_ones", PRIMARY),
         ]
 
-        for i, (label, key) in enumerate(stats):
-            card = tk.Frame(
-                self.stats_frame,
-                bg=CARD,
-                padx=18,
-                pady=15,
-                highlightthickness=1,
-                highlightbackground=BORDER
-            )
-            card.grid(row=0, column=i, padx=10, sticky="nsew")
+        for i, (label, key, color) in enumerate(stats):
+            self.create_stat_card(cards_frame, label, key, color, i)
 
-            tk.Label(
-                card,
-                text=label,
-                bg=CARD,
-                fg=SECONDARY,
-                font=SMALL
-            ).pack(anchor="w")
-
-            # 🔥 BIG NUMBER FIX (was missing / unclear before)
-            tk.Label(
-                card,
-                textvariable=self.stat_vars[key],
-                bg=CARD,
-                fg=PRIMARY,
-                font=("Segoe UI", 22, "bold")
-            ).pack(anchor="w", pady=(8, 0))
-
-            self.stats_frame.grid_columnconfigure(i, weight=1)
-
-        # =========================
-        # ACTION PANEL
-        # =========================
-        action = tk.Frame(
-            content,
+    def create_stat_card(self, parent, label, key, color, index):
+        """Create a styled stat card."""
+        card = tk.Frame(
+            parent,
             bg=CARD,
-            padx=20,
-            pady=18,
             highlightthickness=1,
             highlightbackground=BORDER
         )
-        action.pack(fill="x")
+        card.grid(row=0, column=index, padx=15, sticky="nsew", ipady=25, ipadx=30)
+        parent.grid_columnconfigure(index, weight=1)
 
         tk.Label(
-            action,
-            text="Quick Action",
+            card,
+            text=label,
             bg=CARD,
-            fg="white",
-            font=FONT_BOLD
+            fg=SECONDARY,
+            font=FONT
         ).pack(anchor="w")
 
         tk.Label(
-            action,
-            text="Manage attendance records and updates",
+            card,
+            textvariable=self.stat_vars[key],
             bg=CARD,
-            fg=SECONDARY,
-            font=SMALL
-        ).pack(anchor="w", pady=(3, 10))
+            fg=color,
+            font=("Segoe UI", 28, "bold")
+        ).pack(anchor="w", pady=(12, 0))
 
-        btn = tk.Button(
-            action,
-            text="Open Attendance Manager →",
-            command=self.open_attendance,
-            bg=PRIMARY,
-            fg="black",
-            font=FONT_BOLD,
-            relief="flat",
-            padx=18,
-            pady=10,
-            cursor="hand2",
-            activebackground="#FFE27A"
-        )
-        btn.pack(anchor="w")
-
-        btn.bind("<Enter>", lambda e: btn.config(bg="#FFE27A"))
-        btn.bind("<Leave>", lambda e: btn.config(bg=PRIMARY))
-
-    # =========================
-    # NAV BUTTON FACTORY
-    # =========================
     def nav_button(self, parent, text, command=None, danger=False):
-
+        """Create a navigation button."""
         def on_enter(e):
-            btn.config(bg=PRIMARY if not danger else ERROR, fg="black")
+            btn.config(bg=PRIMARY if not danger else ERROR, fg="black" if not danger else "white")
 
         def on_leave(e):
             btn.config(bg=ENTRY, fg="white")
@@ -208,48 +145,31 @@ class SupportDashboard(tk.Frame):
             relief="flat",
             anchor="w",
             padx=15,
-            pady=10,
+            pady=12,
             cursor="hand2",
             activebackground=PRIMARY
         )
-
-        btn.pack(fill="x", padx=15, pady=5)
-
+        btn.pack(fill="x", padx=12, pady=5)
         btn.bind("<Enter>", on_enter)
         btn.bind("<Leave>", on_leave)
 
         return btn
 
-    # =========================
-    # NAVIGATION
-    # =========================
-    def open_attendance(self):
-        if self.controller and hasattr(self.controller, "show_frame"):
-            self.controller.show_frame("AttendancePage")
-
-    def logout(self):
-        if self.controller:
-            try:
-                self.controller.destroy()
-            except:
-                pass
-
-    # =========================
-    # DATA REFRESH
-    # =========================
     def tkraise(self, *args, **kwargs):
         super().tkraise(*args, **kwargs)
         self.refresh_data()
 
     def refresh_data(self):
+        """Refresh dashboard statistics."""
         try:
             stats = get_attendance_stats()
-
-            self.stat_vars["total"].set(stats.get("total", 0))
-            self.stat_vars["present"].set(stats.get("present", 0))
-            self.stat_vars["paid"].set(stats.get("paid", 0))
-            self.stat_vars["unpaid"].set(stats.get("unpaid", 0))
-            self.stat_vars["plus_ones"].set(stats.get("plus_ones", 0))
-
+            self.stat_vars["total"].set(str(stats.get("total", 0)))
+            self.stat_vars["present"].set(str(stats.get("present", 0)))
+            self.stat_vars["plus_ones"].set(str(stats.get("plus_ones", 0)))
         except Exception as e:
-            print("Dashboard load error:", e)
+            print("Error refreshing dashboard:", e)
+
+    def logout(self):
+        """Logout and return to login."""
+        if self.controller and hasattr(self.controller, 'logout'):
+            self.controller.logout()

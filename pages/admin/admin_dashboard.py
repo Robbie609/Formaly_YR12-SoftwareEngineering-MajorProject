@@ -2,7 +2,6 @@ import tkinter as tk
 from utils.styles import *
 from utils.helpers import center_window
 
-
 class AdminDashboard(tk.Tk):
     def __init__(self, user):
         super().__init__()

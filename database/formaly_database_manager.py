@@ -188,7 +188,7 @@ def update_plus_one(student_id, status):
     conn.close()
 
 def get_attendance_stats():
-    conn = sqlite3.connect("formaly.db")
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
     cursor.execute("SELECT COUNT(*) FROM attendees")
