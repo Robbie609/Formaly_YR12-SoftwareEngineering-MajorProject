@@ -6,7 +6,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '.
 
 from database.formaly_database_manager import get_attendance_stats
 from utils.styles import *
-
+from pages.support.attendance_page import AttendancePage
 
 class SupportDashboard(tk.Frame):
     def __init__(self, parent, controller=None, user=None):
@@ -14,7 +14,6 @@ class SupportDashboard(tk.Frame):
         self.controller = controller
         self.user = user
         self.setup_ui()
-        print("SUPPORT DASHBOARD LOADED")
 
     def setup_ui(self):
         root = tk.Frame(self, bg=BG)
@@ -45,14 +44,14 @@ class SupportDashboard(tk.Frame):
         ).pack(anchor="w", padx=20, pady=(0, 30))
 
         # Navigation Buttons
-        self.nav_button(sidebar, "📊 Dashboard", lambda: self.controller.show_frame("SupportDashboard") if self.controller else None)
-        self.nav_button(sidebar, "👥 Attendance", lambda: self.controller.show_frame("AttendancePage") if self.controller else None)
+        self.nav_button(sidebar, "📊 Dashboard", lambda: self.controller.show_frame(SupportDashboard) if self.controller else None)
+        self.nav_button(sidebar, "👥 Attendance", lambda: self.controller.show_frame(AttendancePage) if self.controller else None)
 
         # Spacer
         tk.Frame(sidebar, bg=BORDER, height=1).pack(fill="x", padx=15, pady=20)
 
         # Logout
-        self.nav_button(sidebar, "🚪 Logout", self.logout, danger=True)
+        self.nav_button(sidebar, "Logout", self.logout, danger=True)
 
         # =========================
         # MAIN CONTENT AREA
@@ -71,14 +70,6 @@ class SupportDashboard(tk.Frame):
             fg="white",
             font=TITLE
         ).pack(anchor="w")
-
-        tk.Label(
-            header,
-            text="Real-time attendance metrics and system status",
-            bg=BG,
-            fg=SECONDARY,
-            font=FONT
-        ).pack(anchor="w", pady=(5, 0))
 
         # KPI Cards Container
         cards_frame = tk.Frame(main, bg=BG)

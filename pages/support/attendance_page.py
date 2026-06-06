@@ -8,7 +8,7 @@ from database.formaly_database_manager import (
     get_all_attendees, update_attendance, update_plus_one
 )
 from utils.styles import *
-
+from pages.support.support_dashboard import *
 
 class AttendancePage(tk.Frame):
     def __init__(self, parent, controller=None, user=None):
