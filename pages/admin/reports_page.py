@@ -22,29 +22,18 @@ class ReportsPage(tk.Frame):
     def _build(self):
         formal = get_formal_data()
 
-        self.grid_rowconfigure(0, weight=1)
-        self.grid_columnconfigure(1, weight=1)
-
         build_sidebar(self, _NAV, "Reports",
                       lambda t: navigate(self, self.parent, _NAV_MAP.get(t, t), self.user),
                       self._imgs)
 
         right = tk.Frame(self, bg=BG)
-        right.grid(row=0, column=1, sticky="nsew")
-        right.rowconfigure(1, weight=1)
-        right.columnconfigure(0, weight=1)
+        right.pack(side="right", fill="both", expand=True)
 
         # Header: "Formal Report" — "Formal" gold, "Report" white
         bar = tk.Frame(right, bg="#0B0B0B", height=130)
         bar.pack(fill="x")
         bar.pack_propagate(False)
-        from utils.widgets import LOGO_PATH, HDR_BG
-        try:
-            img = tk.PhotoImage(file=LOGO_PATH)
-            self._imgs.append(img)
-            tk.Label(bar, image=img, bg=HDR_BG).pack(side="left", padx=(20, 0))
-        except tk.TclError:
-            pass
+        from utils.widgets import HDR_BG
         mid = tk.Frame(bar, bg=HDR_BG)
         mid.pack(side="left", padx=24, expand=True, fill="both")
         title_row = tk.Frame(mid, bg=HDR_BG)
@@ -59,11 +48,9 @@ class ReportsPage(tk.Frame):
         # Main report card
         body = tk.Frame(right, bg=BG)
         body.pack(fill="both", expand=True, padx=22, pady=18)
-        body.rowconfigure(0, weight=1)
-        body.columnconfigure(0, weight=1)
 
         card = tk.Frame(body, bg=CARD)
-        card.grid(row=0, column=0, sticky="nsew")
+        card.pack(side="left", fill="both", expand=True)
 
         formal_name = formal.get("formal_name") or "Formal"
         tk.Label(card, text=f"{formal_name} Report", bg=CARD, fg=GOLD,
@@ -98,10 +85,10 @@ class ReportsPage(tk.Frame):
         fb_row.columnconfigure((0, 1), weight=1)
 
         fb1 = tk.Frame(fb_row, bg=ENTRY, height=80)
-        fb1.grid(row=0, column=0, padx=(0, 8), sticky="ew")
+        fb1.pack(side="left", fill="x", expand=True, padx=(0, 8))
         tk.Label(fb1, text=str(feedback_label), bg=ENTRY, fg=TEXT_MUTED,
                  font=FONT_BODY, wraplength=280,
                  justify="left").pack(padx=8, pady=8, anchor="w")
 
         fb2 = tk.Frame(fb_row, bg=ENTRY, height=80)
-        fb2.grid(row=0, column=1, padx=(8, 0), sticky="ew")
+        fb2.pack(side="left", fill="x", expand=True, padx=(8, 0))

@@ -7,15 +7,15 @@ from utils.styles import (
 )
 
 LOGO_PATH = "assets/Logo.png"
-SIDEBAR_W = 400
+SIDEBAR_W = 200
 HEADER_H  = 130
 HDR_BG    = "#0B0B0B"
 
 
 def build_sidebar(parent, nav_items, active, on_navigate, imgs):
     sb = tk.Frame(parent, bg=CARD, width=SIDEBAR_W)
-    sb.grid(row=0, column=0, sticky="nsew")
-    sb.grid_propagate(False)
+    sb.pack(side="left", fill="y")
+    sb.pack_propagate(False)
 
     logo_frame = tk.Frame(sb, bg=CARD, height=HEADER_H)
     logo_frame.pack(fill="x")
@@ -90,7 +90,7 @@ def build_subpage_header(parent, title, on_back, imgs):
     bar = tk.Frame(parent, bg=HDR_BG, height=HEADER_H)
     bar.pack(fill="x")
     bar.pack_propagate(False)
-    back = tk.Frame(bar, bg="#1A1A1A", width=SIDEBAR_W)
+    back = tk.Frame(bar, bg="#1A1A1A", width=100)
     back.pack(side="left", fill="y")
     back.pack_propagate(False)
     tk.Button(back, text="←", bg="#1A1A1A", fg=TEXT_LIGHT,
@@ -109,11 +109,33 @@ def build_subpage_header(parent, title, on_back, imgs):
 
 def stat_card(parent, label, value, col, total_cols, pad=10):
     card = tk.Frame(parent, bg=CARD)
-    card.grid(row=0, column=col,
-              padx=(0 if col == 0 else pad, 0 if col == total_cols - 1 else pad),
-              sticky="nsew")
-    tk.Label(card, text=label,      bg=CARD, fg=TEXT_LIGHT, font=FONT_BODY,  anchor="w").pack(anchor="w", padx=18, pady=(18, 4))
-    tk.Label(card, text=str(value), bg=CARD, fg=GOLD,       font=FONT_STAT,  anchor="w").pack(anchor="w", padx=18, pady=(0, 18))
+
+    card.pack(
+        side="left",
+        fill="both",
+        expand=True,
+        padx=(0 if col == 0 else pad,
+              0 if col == total_cols - 1 else pad)
+    )
+
+    tk.Label(
+        card,
+        text=label,
+        bg=CARD,
+        fg=TEXT_LIGHT,
+        font=FONT_BODY,
+        anchor="w"
+    ).pack(anchor="w", padx=18, pady=(18, 4))
+
+    tk.Label(
+        card,
+        text=str(value),
+        bg=CARD,
+        fg=GOLD,
+        font=FONT_STAT,
+        anchor="w"
+    ).pack(anchor="w", padx=18, pady=(0, 18))
+
     return card
 
 

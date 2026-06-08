@@ -78,6 +78,7 @@ class VenueSuggestionPage(tk.Frame):
 
             # Calendar icon placeholder
             tk.Label(card, text="📅", bg=CARD, font=("Segoe UI Emoji", 28)).pack(anchor="w", padx=16, pady=(0, 8))
+            print("Calendar function where they can see the dates that other events are running is not implemented yet.")
 
             # Actions
             act = tk.Frame(card, bg=CARD)

@@ -51,8 +51,8 @@ class FormalyLoginApp(tk.Tk):
     # Left panel with logo
     def _build_left(self):
         panel = tk.Frame(self, bg=PANEL_BLACK, width=500)
-        panel.grid(row=0, column=0, sticky="nsew")
-        panel.grid_propagate(False)
+        panel.pack(side="left", fill="both")
+        panel.pack_propagate(False)
         panel.columnconfigure(0, weight=1)
         panel.rowconfigure(0, weight=0)
         panel.rowconfigure(1, weight=1)
@@ -62,7 +62,7 @@ class FormalyLoginApp(tk.Tk):
             panel, text="Formaly",
             bg=PANEL_BLACK, fg=GOLD,
             font=FONT_BRAND, anchor="center"
-        ).grid(row=0, column=0, sticky="ew", padx=30, pady=(36, 0))
+        ).pack(fill="x", padx=30, pady=(36, 0))
 
         # Logo Image
         logo_frame = tk.Frame(panel, bg=PANEL_BLACK)
@@ -71,22 +71,22 @@ class FormalyLoginApp(tk.Tk):
         logo_frame.rowconfigure(0, weight=1)
         try:
             self._logo = tk.PhotoImage(file=LOGO_PATH)
-            tk.Label(logo_frame, image=self._logo, bg=PANEL_BLACK
-                     ).grid(row=0, column=0)
+            # I want to double the image's size
+            tk.Label(logo_frame, image=self._logo, bg=PANEL_BLACK).pack(expand=True)
         except tk.TclError:
             tk.Label(logo_frame, text="🎩", bg=PANEL_BLACK, fg=GOLD,
-                     font=("Segoe UI Emoji", 72)).grid(row=0, column=0)
+                     font=("Segoe UI Emoji", 72)).pack(expand=True)
 
     # Right panel with buttons and entry fields for login
     # Creating the right section of the window
     def _build_right(self):
         panel = tk.Frame(self, bg=CREAM)
-        panel.grid(row=0, column=1, sticky="nsew")
+        panel.pack(side="right", fill="both", expand=True)
         panel.columnconfigure(0, weight=1)
         panel.rowconfigure(0, weight=1)
 
         form = tk.Frame(panel, bg=CREAM)
-        form.grid(row=0, column=0)
+        form.pack(expand=True)
         self._build_form(form)
 
     # Setting it as a form

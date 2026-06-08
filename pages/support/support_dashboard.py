@@ -20,29 +20,21 @@ class SupportDashboard(tk.Frame):
         att      = get_attendance_stats()
         formal   = get_formal_data()
 
-        self.grid_rowconfigure(0, weight=1)
-        self.grid_columnconfigure(1, weight=1)
-
         build_sidebar(self, _NAV, "Dashboard",
                       lambda t: navigate(self, self.parent, _NAV_MAP.get(t, t), self.user),
                       self._imgs)
 
         right = tk.Frame(self, bg=BG)
-        right.grid(row=0, column=1, sticky="nsew")
-        right.rowconfigure(1, weight=1)
-        right.columnconfigure(0, weight=1)
+        right.pack(side="right", fill="both", expand=True)
 
         build_header(right, f"Welcome, {username}", "Support Dashboard", self._imgs)
 
         body = tk.Frame(right, bg=BG)
         body.pack(fill="both", expand=True, padx=22, pady=18)
-        body.columnconfigure((0, 1, 2), weight=1)
-        body.rowconfigure(1, weight=1)
 
         # Stat cards
         stats_row = tk.Frame(body, bg=BG)
-        stats_row.grid(row=0, column=0, columnspan=3, sticky="ew", pady=(0, 14))
-        stats_row.columnconfigure((0, 1, 2), weight=1)
+        stats_row.pack(fill="x", pady=(0, 14))
 
         total    = att.get("total",    0)
         present  = att.get("present",  0)
@@ -54,7 +46,7 @@ class SupportDashboard(tk.Frame):
 
         # Event details card
         ev_card = tk.Frame(body, bg=CARD)
-        ev_card.grid(row=1, column=0, columnspan=3, sticky="nsew")
+        ev_card.pack(fill="both", expand=True)
 
         tk.Label(ev_card, text="EVENT DETAILS:", bg=CARD, fg=TEXT_LIGHT,
                  font=FONT_BOLD, anchor="w").pack(fill="x", padx=18, pady=(16, 10))

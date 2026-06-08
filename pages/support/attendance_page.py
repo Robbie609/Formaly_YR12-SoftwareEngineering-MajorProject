@@ -22,19 +22,15 @@ class AttendancePage(tk.Frame):
         navigate(self, self.parent, "support", self.user)
 
     def _build(self):
-        self.rowconfigure(1, weight=1)
-        self.columnconfigure(0, weight=1)
 
         build_subpage_header(self, "ATTENDANCE", self._back, self._imgs)
 
         body = tk.Frame(self, bg=BG)
         body.pack(fill="both", expand=True, padx=22, pady=18)
-        body.rowconfigure(1, weight=1)
-        body.columnconfigure(0, weight=1)
 
         # Search bar
         search_frame = tk.Frame(body, bg=CARD, bd=1, relief="solid")
-        search_frame.grid(row=0, column=0, sticky="ew", pady=(0, 14), ipadx=4, ipady=4)
+        search_frame.pack(fill="x", pady=(0, 14), padx=4, ipady=4)
         self._search_var = tk.StringVar()
         self._search_var.trace_add("write", lambda *_: self._refresh())
         tk.Entry(search_frame, textvariable=self._search_var,
@@ -75,7 +71,7 @@ class AttendancePage(tk.Frame):
 
         # Action buttons
         act = tk.Frame(body, bg=BG)
-        act.grid(row=2, column=0, sticky="e", pady=(14, 0))
+        act.pack(anchor="e", pady=(14, 0))
 
         self._btn_plus    = self._action_btn(act, "Mark Plus One",  GOLD,    lambda: self._toggle_plus(1))
         self._btn_present = self._action_btn(act, "Mark Present",   SUCCESS, lambda: self._toggle_present(1))

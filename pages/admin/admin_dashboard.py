@@ -10,6 +10,9 @@ from utils.styles import (
     FONT_BODY, FONT_BOLD, FONT_H2, FONT_H3, FONT_SMALL, FONT_STAT,
 )
 from utils.widgets import build_sidebar, build_header, stat_card, navigate, make_modal, modal_field
+import subprocess
+import sys
+
 
 _NAV     = ["Dashboard", "Tasks", "Venues", "Attendance", "Reports"]
 _NAV_MAP = {"Dashboard": "admin", "Tasks": "tasks", "Venues": "venues",
@@ -28,29 +31,19 @@ class AdminDashboard(tk.Frame):
         username = self.user["Username"] if self.user else "Admin"
         formal   = get_formal_data()
 
-        self.grid_rowconfigure(0, weight=1)
-        self.grid_columnconfigure(1, weight=1)
-
-        build_sidebar(self, _NAV, "Dashboard",
-                      lambda t: navigate(self, self.parent, _NAV_MAP.get(t, t), self.user),
-                      self._imgs)
+        build_sidebar(self,_NAV,"Dashboard",lambda t: navigate(self, self.parent, _NAV_MAP.get(t, t), self.user),self._imgs)
 
         right = tk.Frame(self, bg=BG)
-        right.grid(row=0, column=1, sticky="nsew")
-        right.rowconfigure(1, weight=1)
-        right.columnconfigure(0, weight=1)
+        right.pack(side="right", fill="both", expand=True)
 
         build_header(right, f"Welcome, {username}", "Admin Dashboard", self._imgs)
 
         body = tk.Frame(right, bg=BG)
         body.pack(fill="both", expand=True, padx=22, pady=18)
-        body.columnconfigure((0, 1, 2), weight=1)
-        body.rowconfigure(1, weight=1)
 
         # Stat cards
         stats_row = tk.Frame(body, bg=BG)
-        stats_row.grid(row=0, column=0, columnspan=3, sticky="ew", pady=(0, 14))
-        stats_row.columnconfigure((0, 1, 2), weight=1)
+        stats_row.pack(fill="x", pady=(0, 14))
 
         pending = get_pending_task_count()
         att     = get_attendance_stats()
@@ -62,7 +55,7 @@ class AdminDashboard(tk.Frame):
 
         # Lower row: event details (left 2/3) + budget (right 1/3)
         ev_card = tk.Frame(body, bg=CARD)
-        ev_card.grid(row=1, column=0, columnspan=2, sticky="nsew", padx=(0, 10))
+        ev_card.pack(side="left", fill="both", expand=True, padx=(0, 10))
 
         tk.Label(ev_card, text="EVENT DETAILS:", bg=CARD, fg=TEXT_LIGHT,
                  font=FONT_BOLD, anchor="w").pack(fill="x", padx=18, pady=(16, 8))
@@ -87,7 +80,7 @@ class AdminDashboard(tk.Frame):
 
         # Budget card
         bud_card = tk.Frame(body, bg=CARD)
-        bud_card.grid(row=1, column=2, sticky="nsew")
+        bud_card.pack(side="right", fill="y")
 
         tk.Label(bud_card, text="Budget", bg=CARD, fg=TEXT_LIGHT,
                  font=FONT_BOLD, anchor="w").pack(fill="x", padx=18, pady=(16, 6))

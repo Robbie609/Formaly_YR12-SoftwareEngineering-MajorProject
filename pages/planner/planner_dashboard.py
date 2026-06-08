@@ -5,8 +5,8 @@ from utils.styles import (
     BG, CARD, BORDER, GOLD, TEXT_LIGHT, TEXT_MUTED, ERROR, SUCCESS,
     FONT_BODY, FONT_BOLD, FONT_H3, FONT_SMALL, FONT_STAT,
 )
-from utils.widgets import build_sidebar, build_header, stat_card, navigate
-from utils.helpers import truncate_text
+from utils.widgets import *
+from utils.helpers import *
 
 _NAV     = ["Dashboard", "Tasks", "Venues"]
 _NAV_MAP = {"Dashboard": "planner", "Tasks": "tasks", "Venues": "venues"}
@@ -23,24 +23,16 @@ class PlannerDashboard(tk.Frame):
     def _build(self):
         username = self.user["Username"] if self.user else "Planner"
 
-        self.grid_rowconfigure(0, weight=1)
-        self.grid_columnconfigure(1, weight=1)
-
         build_sidebar(self, _NAV, "Dashboard",
-                      lambda t: navigate(self, self.parent, _NAV_MAP.get(t, t), self.user),
-                      self._imgs)
+                      lambda t: navigate(self, self.parent, _NAV_MAP.get(t, t), self.user),self._imgs)
 
         right = tk.Frame(self, bg=BG)
-        right.grid(row=0, column=1, sticky="nsew")
-        right.rowconfigure(1, weight=1)
-        right.columnconfigure(0, weight=1)
+        right.pack(side="right", fill="both", expand=True)
 
         build_header(right, f"Welcome, {username}", "Planner Dashboard", self._imgs)
 
         body = tk.Frame(right, bg=BG)
         body.pack(fill="both", expand=True, padx=22, pady=18)
-        body.columnconfigure((0, 1, 2, 3), weight=1)
-        body.rowconfigure(1, weight=1)
 
         # Fetch metrics
         conn   = sqlite3.connect("database/formaly.db")
@@ -56,8 +48,7 @@ class PlannerDashboard(tk.Frame):
 
         # Stat cards row
         stats_row = tk.Frame(body, bg=BG)
-        stats_row.grid(row=0, column=0, columnspan=4, sticky="ew", pady=(0, 14))
-        stats_row.columnconfigure((0, 1, 2, 3), weight=1)
+        stats_row.pack(fill="x", pady=(0, 14))
 
         stat_card(stats_row, "Total Tasks",     total,  0, 4)
         stat_card(stats_row, "Completed Tasks", comp,   1, 4)
@@ -66,16 +57,14 @@ class PlannerDashboard(tk.Frame):
 
         # Lower row: upcoming tasks (left) + recent venues (right)
         lower = tk.Frame(body, bg=BG)
-        lower.grid(row=1, column=0, columnspan=4, sticky="nsew")
-        lower.columnconfigure((0, 1), weight=1, uniform="eq")
-        lower.rowconfigure(0, weight=1)
+        lower.pack(fill="both", expand=True)
 
         self._upcoming_card(lower, 0)
         self._venues_card(lower, 1)
 
     def _upcoming_card(self, parent, col):
         card = tk.Frame(parent, bg=CARD)
-        card.grid(row=0, column=col, padx=(0, 8) if col == 0 else (8, 0), sticky="nsew")
+        card.pack(side="left",fill="both",expand=True,padx=(0, 8) if col == 0 else (8, 0))
 
         tk.Label(card, text="Upcoming Tasks", bg=CARD, fg=GOLD,
                  font=FONT_H3, anchor="w").pack(fill="x", padx=18, pady=(16, 10))
@@ -104,7 +93,7 @@ class PlannerDashboard(tk.Frame):
 
     def _venues_card(self, parent, col):
         card = tk.Frame(parent, bg=CARD)
-        card.grid(row=0, column=col, padx=(8, 0) if col == 1 else (0, 8), sticky="nsew")
+        card.pack(side="left",fill="both",expand=True,padx=(8, 0) if col == 1 else (0, 8))
 
         tk.Label(card, text="Recent Venue Options", bg=CARD, fg=GOLD,
                  font=FONT_H3, anchor="w").pack(fill="x", padx=18, pady=(16, 10))
