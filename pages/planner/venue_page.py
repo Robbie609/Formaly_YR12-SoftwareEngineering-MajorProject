@@ -22,15 +22,11 @@ class VenueSuggestionPage(tk.Frame):
         navigate(self, self.parent, "planner", self.user)
 
     def _build(self):
-        self.rowconfigure(1, weight=1)
-        self.columnconfigure(0, weight=1)
 
         build_subpage_header(self, "VENUE OPTIONS", self._back, self._imgs)
 
         body = tk.Frame(self, bg=BG)
         body.pack(fill="both", expand=True)
-        body.rowconfigure(0, weight=1)
-        body.columnconfigure(0, weight=1)
 
         self._scroll_inner = scrollable_frame(body)
         self._scroll_inner.columnconfigure((0, 1), weight=1, uniform="eq")

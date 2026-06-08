@@ -10,6 +10,10 @@ from utils.styles import (
 )
 from utils.helpers import *
 
+_NAV     = ["Dashboard", "Tasks", "Venues", "Attendance", "Reports"]
+_NAV_MAP = {"Dashboard": "admin", "Tasks": "tasks", "Venues": "venues",
+            "Attendance": "attendance", "Reports": "reports"}
+
 class TaskPage(tk.Frame):
     def __init__(self, parent, user=None):
         super().__init__(parent, bg=BG)
@@ -24,18 +28,18 @@ class TaskPage(tk.Frame):
         self.setup_layout()
 
     def setup_layout(self):
+        build_subpage_header(self, "Tasks Manager", self._back, self._imgs)
 
-        self.grid_rowconfigure(0, weight=1)
-        self.grid_columnconfigure(0, weight=1)
+        body = tk.Frame(self, bg=BG)
+        body.pack(fill="both", expand=True)
 
-    # MAIN CONTENT ONLY (no sidebar here)
-        self.main_content = tk.Frame(self, bg=BG)
+    # MAIN CONTENT MUST BE INSIDE BODY
+        self.main_content = tk.Frame(body, bg=BG)
         self.main_content.pack(fill="both", expand=True)
 
-        from utils.widgets import build_subpage_header, navigate
-    # HEADER WITH BACK ARROW
-        build_subpage_header(self.main_content,"Tasks",lambda: navigate(self, self.parent, "planner", self.user),self._imgs if hasattr(self, "_imgs") else [])
         self.render_task_workspace()
+    def _back(self):
+        navigate(self, self.parent, "planner", self.user)
 
     def render_task_workspace(self):
         clear_frame(self.main_content)
