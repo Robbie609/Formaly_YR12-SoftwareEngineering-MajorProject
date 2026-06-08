@@ -14,7 +14,7 @@ from utils.styles import (
 )
 
 # Logo Variable
-LOGO_PATH = "assets/Logo.png"
+LOGO_PATH = "assets/Logo1.png"
 
 # Fonts used
 _F_LABEL  = ("Segoe UI", 9)

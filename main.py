@@ -2,7 +2,6 @@ from database.formaly_database_manager import init_db
 import tkinter as tk
 from pages.login.formaly_login import FormalyLoginApp
 
-
 def main():
     # Initialize database
     init_db()
@@ -10,7 +9,6 @@ def main():
     # Launch login page as entry point
     app = FormalyLoginApp()
     app.mainloop()
-
 
 if __name__ == "__main__":
     main()

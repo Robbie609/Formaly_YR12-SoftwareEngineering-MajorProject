@@ -12,7 +12,7 @@ from utils.styles import (
 )
 
 # Logo Variable
-LOGO_PATH = "assets/Logo.png"
+LOGO_PATH = "assets/Logo1.png"
 
 # Fonts used
 _F_LABEL  = ("Segoe UI",  9)
@@ -60,7 +60,7 @@ class FormalyRegisterApp(tk.Toplevel):
             panel, text="Formaly",
             bg=PANEL_BLACK, fg=GOLD,
             font=FONT_BRAND, anchor="center"
-        ).grid(row=0, column=0, sticky="ew", padx=30, pady=(36, 0))
+        ).pack(fill="x", padx=30, pady=(36, 0))
 
         # Logo Image
         logo_frame = tk.Frame(panel, bg=PANEL_BLACK)
