@@ -1,192 +1,145 @@
 import tkinter as tk
-import sqlite3
-from datetime import datetime
-
-from utils.styles import (
-    BG, CARD, PRIMARY, SECONDARY, SUCCESS, ERROR, BORDER, 
-    FONT, FONT_BOLD, TITLE, SUBTITLE, SMALL, PADDING_X, PADDING_Y
+from tkinter import messagebox
+from database.formaly_database_manager import (
+    get_formal_data, get_pending_task_count, get_attendance_stats,
+    get_venue_count, update_formal_data,
 )
-from utils.helpers import *
+from utils.styles import (
+    BG, CARD, ENTRY, BORDER, GOLD, GOLD_HOV,
+    TEXT_LIGHT, TEXT_MUTED, ERROR, SUCCESS,
+    FONT_BODY, FONT_BOLD, FONT_H2, FONT_H3, FONT_SMALL, FONT_STAT,
+)
+from utils.widgets import build_sidebar, build_header, stat_card, navigate, make_modal, modal_field
+
+_NAV     = ["Dashboard", "Tasks", "Venues", "Attendance", "Reports"]
+_NAV_MAP = {"Dashboard": "admin", "Tasks": "tasks", "Venues": "venues",
+            "Attendance": "attendance", "Reports": "reports"}
+
 
 class AdminDashboard(tk.Frame):
     def __init__(self, parent, controller=None, user=None):
         super().__init__(parent, bg=BG)
         self.parent = parent
-        self.controller = controller
-        self.user = user
+        self.user   = user
+        self._imgs  = []
+        self._build()
 
-        self.stats = {
-            'total_attendees': 0, 'checked_in': 0, 
-            'total_tasks': 0, 'completed_tasks': 0, 'total_venues': 0
-        }
-        self.recent_tasks = []
+    def _build(self):
+        username = self.user["Username"] if self.user else "Admin"
+        formal   = get_formal_data()
 
-        self._load_statistics()
-        self._setup_layout()
-
-    def _load_statistics(self):
-        try:
-            with sqlite3.connect("database/formaly.db") as conn:
-                cursor = conn.cursor()
-
-                cursor.execute("SELECT COUNT(*) FROM attendees")
-                self.stats["total_attendees"] = cursor.fetchone()
-
-                cursor.execute("SELECT COUNT(*) FROM attendees WHERE attendance = 1")
-                self.stats["checked_in"] = cursor.fetchone()
-
-                cursor.execute("SELECT COUNT(*) FROM tasks")
-                self.stats["total_tasks"] = cursor.fetchone()
-
-                cursor.execute("SELECT COUNT(*) FROM tasks WHERE status = 'Completed'")
-                self.stats["completed_tasks"] = cursor.fetchone()
-
-                cursor.execute("SELECT COUNT(*) FROM venues")
-                self.stats["total_venues"] = cursor.fetchone()
-
-                cursor.execute("""
-                    SELECT title, priority, status, due_date
-                    FROM tasks
-                    ORDER BY due_date ASC
-                    LIMIT 5
-                """)
-                self.recent_tasks = cursor.fetchall()
-
-        except sqlite3.Error as e:
-            print(f"Database Error: {e}")
-
-    def _setup_layout(self):
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
-        
-        self._render_sidebar()
-        
-        self.content_frame = tk.Frame(self, bg=BG)
-        self.content_frame.grid(row=0, column=1, sticky="nsew", padx=PADDING_X, pady=PADDING_Y)
-        
-        self._render_header()
-        self._render_metrics()
-        self._render_activity()
 
-    def _render_sidebar(self):
-        sidebar = tk.Frame(self, bg=CARD, width=260)
-        sidebar.grid(row=0, column=0, sticky="nsew")
-        sidebar.grid_propagate(False)
-        
-        tk.Label(sidebar, text="Formaly.", font=TITLE, bg=CARD, fg=PRIMARY, anchor="w").pack(fill="x", padx=PADDING_X, pady=(PADDING_Y, PADDING_Y * 2))
-        
-        nav_items = [
-            ("Dashboard", "dashboard", True),
-            ("Tasks", "tasks", False),
-            ("Venue", "venue", False),
-            ("Attendance", "attendance", False),
-            ("Reports", "reports", False)
-        ]
-        
-        for text, target, is_active in nav_items:
-            self._create_nav_button(sidebar, text, target, is_active)
+        build_sidebar(self, _NAV, "Dashboard",
+                      lambda t: navigate(self, self.parent, _NAV_MAP.get(t, t), self.user),
+                      self._imgs)
 
-        logout_frame = tk.Frame(sidebar, bg=CARD)
-        logout_frame.pack(side="bottom", fill="x", pady=PADDING_Y)
-        lbl = tk.Label(logout_frame, text="Logout", font=FONT_BOLD, bg=CARD, fg=ERROR, anchor="w", cursor="hand2")
-        lbl.pack(fill="x", padx=PADDING_X, pady=8)
-        lbl.bind("<Button-1>", lambda e: self.navigate("logout"))
+        right = tk.Frame(self, bg=BG)
+        right.grid(row=0, column=1, sticky="nsew")
+        right.rowconfigure(1, weight=1)
+        right.columnconfigure(0, weight=1)
 
-    def _create_nav_button(self, parent, text, target, is_active):
-        bg_color = BORDER if is_active else CARD
-        fg_color = PRIMARY if is_active else SECONDARY
-        
-        btn_frame = tk.Frame(parent, bg=bg_color)
-        btn_frame.pack(fill="x", pady=2)
-        
-        if is_active:
-            tk.Frame(btn_frame, bg=PRIMARY, width=4).pack(side="left", fill="y")
-        
-        lbl = tk.Label(btn_frame, text=text, font=FONT_BOLD, bg=bg_color, fg=fg_color, anchor="w", cursor="hand2")
-        lbl.pack(side="left", fill="both", expand=True, padx=20, pady=12)
-        
-        if not is_active:
-            lbl.bind("<Button-1>", lambda e, t=target: self.navigate(t))
+        build_header(right, f"Welcome, {username}", "Admin Dashboard", self._imgs)
 
-    def _render_header(self):
-        header_frame = tk.Frame(self.content_frame, bg=BG)
-        header_frame.pack(fill="x", pady=(0, PADDING_Y))
-        
-        current_date = datetime.now().strftime("%A, %B %d, %Y")
-        tk.Label(header_frame, text="Admin Dashboard", font=TITLE, bg=BG, fg=PRIMARY, anchor="w").pack(fill="x")
-        tk.Label(header_frame, text=f"Overview • {current_date}", font=SUBTITLE, bg=BG, fg=SECONDARY, anchor="w").pack(fill="x")
+        body = tk.Frame(right, bg=BG)
+        body.pack(fill="both", expand=True, padx=22, pady=18)
+        body.columnconfigure((0, 1, 2), weight=1)
+        body.rowconfigure(1, weight=1)
 
-    def _render_metrics(self):
-        metrics_frame = tk.Frame(self.content_frame, bg=BG)
-        metrics_frame.pack(fill="x", pady=(0, PADDING_Y))
-        
-        cards = [
-            ("Total Tasks", self.stats['total_tasks']),
-            ("Completed", self.stats['completed_tasks']),
-            ("Checked In", f"{self.stats['checked_in']} / {self.stats['total_attendees']}"),
-            ("Venues", self.stats['total_venues'])
-        ]
-        
-        for i, (title, value) in enumerate(cards):
-            metrics_frame.grid_columnconfigure(i, weight=1)
-            self._create_metric_card(metrics_frame, title, value, i)
+        # Stat cards
+        stats_row = tk.Frame(body, bg=BG)
+        stats_row.grid(row=0, column=0, columnspan=3, sticky="ew", pady=(0, 14))
+        stats_row.columnconfigure((0, 1, 2), weight=1)
 
-    def _create_metric_card(self, parent, title, value, col):
-        card = tk.Frame(parent, bg=CARD, padx=20, pady=20)
-        card.grid(row=0, column=col, padx=(0, 15 if col < 3 else 0), sticky="nsew")
-        
-        tk.Label(card, text=title, font=SMALL, bg=CARD, fg=SECONDARY, anchor="w").pack(fill="x")
-        tk.Label(card, text=str(value), font=TITLE, bg=CARD, fg=PRIMARY, anchor="w").pack(fill="x", pady=(5, 0))
+        pending = get_pending_task_count()
+        att     = get_attendance_stats()
+        venues  = get_venue_count()
 
-    def _render_activity(self):
-        activity_frame = tk.Frame(self.content_frame, bg=CARD, padx=25, pady=25)
-        activity_frame.pack(fill="both", expand=True)
-        
-        tk.Label(activity_frame, text="Recent Tasks", font=SUBTITLE, bg=CARD, fg=PRIMARY, anchor="w").pack(fill="x", pady=(0, 15))
-        
-        if not self.recent_tasks:
-            tk.Label(activity_frame, text="No tasks found.", font=FONT, bg=CARD, fg=SECONDARY).pack()
+        stat_card(stats_row, "Tasks Pending",   pending,             0, 3)
+        stat_card(stats_row, "Venue Selected",  venues,              1, 3)
+        stat_card(stats_row, "Total Attendees", att.get("total", 0), 2, 3)
+
+        # Lower row: event details (left 2/3) + budget (right 1/3)
+        ev_card = tk.Frame(body, bg=CARD)
+        ev_card.grid(row=1, column=0, columnspan=2, sticky="nsew", padx=(0, 10))
+
+        tk.Label(ev_card, text="EVENT DETAILS:", bg=CARD, fg=TEXT_LIGHT,
+                 font=FONT_BOLD, anchor="w").pack(fill="x", padx=18, pady=(16, 8))
+
+        ev_name = formal.get("formal_name") or "—"
+        ev_date = formal.get("budget")       or "—"
+        fid     = formal.get("formal_id")
+
+        self._detail_row(ev_card, "Name:", ev_name,
+                         lambda: self._edit(fid, "formal_name", ev_name))
+        tk.Frame(ev_card, bg=BORDER, height=1).pack(fill="x", padx=18)
+        self._detail_row(ev_card, "Date:", "TBA", lambda: None)
+
+        sub_btn = tk.Button(ev_card, text="Submit Invitation",
+                            bg=GOLD, fg=TEXT_LIGHT, font=FONT_BOLD,
+                            relief="flat", cursor="hand2",
+                            activebackground=GOLD_HOV, activeforeground=TEXT_LIGHT,
+                            command=lambda: messagebox.showinfo("Invitation", "Invitation submitted!"))
+        sub_btn.pack(anchor="w", padx=18, pady=14)
+        sub_btn.bind("<Enter>", lambda e: sub_btn.config(bg=GOLD_HOV))
+        sub_btn.bind("<Leave>", lambda e: sub_btn.config(bg=GOLD))
+
+        # Budget card
+        bud_card = tk.Frame(body, bg=CARD)
+        bud_card.grid(row=1, column=2, sticky="nsew")
+
+        tk.Label(bud_card, text="Budget", bg=CARD, fg=TEXT_LIGHT,
+                 font=FONT_BOLD, anchor="w").pack(fill="x", padx=18, pady=(16, 6))
+
+        budget  = formal.get("budget",   0) or 0
+        expenses = formal.get("expenses", 0) or 0
+        pct = max(0.0, min(1.0, expenses / budget)) if budget else 0.0
+
+        tk.Label(bud_card, text=f"${budget:,}", bg=CARD, fg=GOLD,
+                 font=FONT_H3).pack(anchor="w", padx=18)
+
+        bar_bg = tk.Frame(bud_card, bg=BORDER, height=12)
+        bar_bg.pack(fill="x", padx=18, pady=12)
+
+        fill = tk.Frame(bar_bg, bg=GOLD, height=12)
+        fill.place(relx=0, rely=0, relwidth=pct, relheight=1)
+
+        edit_bud = tk.Button(bud_card, text="Edit", bg=ENTRY, fg=TEXT_LIGHT,
+                             font=FONT_SMALL, relief="flat", cursor="hand2",
+                             activebackground=BORDER,
+                             command=lambda: self._edit(fid, "budget", budget))
+        edit_bud.pack(anchor="w", padx=18, pady=(0, 14))
+
+    def _detail_row(self, parent, label, value, edit_cmd):
+        row = tk.Frame(parent, bg=CARD)
+        row.pack(fill="x", padx=18, pady=8)
+        tk.Label(row, text=label, bg=CARD, fg=TEXT_LIGHT,
+                 font=FONT_BOLD, width=7, anchor="w").pack(side="left")
+        tk.Label(row, text=str(value), bg=CARD, fg=TEXT_MUTED,
+                 font=FONT_BODY, anchor="w").pack(side="left", expand=True, fill="x")
+        btn = tk.Button(row, text="Edit", bg=ENTRY, fg=TEXT_LIGHT,
+                        font=FONT_SMALL, relief="flat", cursor="hand2",
+                        command=edit_cmd, activebackground=BORDER)
+        btn.pack(side="right")
+
+    def _edit(self, fid, field, current):
+        if not fid:
+            messagebox.showinfo("Notice", "No formal data record found.")
             return
-            
-        headers_frame = tk.Frame(activity_frame, bg=CARD)
-        headers_frame.pack(fill="x", pady=(0, 10))
-        
-        for title, weight in [("Task", 3), ("Priority", 1), ("Status", 1), ("Due Date", 1)]:
-            tk.Label(headers_frame, text=title, font=FONT_BOLD, bg=CARD, fg=SECONDARY, anchor="w").pack(side="left", expand=True, fill="x")
-            
-        tk.Frame(activity_frame, bg=BORDER, height=1).pack(fill="x", pady=(0, 10))
-        
-        for task in self.recent_tasks:
-            row = tk.Frame(activity_frame, bg=CARD)
-            row.pack(fill="x", pady=6)
-            
-            for i, val in enumerate(task):
-                color = SUCCESS if i == 2 and val == "Completed" else PRIMARY
-                tk.Label(row, text=str(val), font=FONT, bg=CARD, fg=color, anchor="w").pack(side="left", expand=True, fill="x")
-
-    def navigate(self, target):
-        self.destroy()
-        
-        # Elements are mounted via .place(relwidth=1, relheight=1) to prevent geometry manager clashes with root window setups
-        if target == "dashboard":
-            from pages.admin.admin_dashboard import AdminDashboard
-            AdminDashboard(self.parent, self.controller, user=self.user).place(relwidth=1, relheight=1)
-        elif target == "tasks":
-            from pages.planner.task_page import TaskPage
-            TaskPage(self.parent, self.controller).place(relwidth=1, relheight=1)
-        elif target == "venue":
-            from pages.planner.venue_page import VenueSuggestionPage
-            VenueSuggestionPage(self.parent, self.controller).place(relwidth=1, relheight=1)
-        elif target == "attendance":
-            from pages.support.attendance_page import AttendancePage
-            AttendancePage(self.parent, self.controller).place(relwidth=1, relheight=1)
-        elif target == "reports":
-            from pages.admin.reports_page import ReportsPage
-            ReportsPage(self.parent, self.controller).place(relwidth=1, relheight=1)
-        elif target == "logout":
-            # If leaving the window entirely, rebuild/lift clean app instance container
-            self.parent.current_user = None
-            self.parent.selected_role = None
-            for child in self.parent.winfo_children():
-                child.destroy()
-            self.parent.build_ui()
+        m = make_modal(self, f"Edit {field}", 360, 160)
+        f = tk.Frame(m, bg=m.cget("bg"), padx=20, pady=20)
+        f.pack(fill="both", expand=True)
+        ent = modal_field(f, field.replace("_", " ").title(), str(current))
+        def _save():
+            val = ent.get().strip()
+            try:
+                val = int(val) if field in ("budget", "expenses") else val
+            except ValueError:
+                pass
+            update_formal_data(fid, **{field: val})
+            m.destroy()
+            navigate(self, self.parent, "admin", self.user)
+        tk.Button(f, text="Save", bg=GOLD, fg=TEXT_LIGHT, font=FONT_BOLD,
+                  relief="flat", cursor="hand2",
+                  activebackground=GOLD_HOV, command=_save).pack(anchor="e", pady=(10, 0))

@@ -1,311 +1,286 @@
+# Imports
 import tkinter as tk
 from tkinter import messagebox
-
 from database.formaly_database_manager import get_user
-from utils.styles import *
-from utils.helpers import center_window
+from utils.helpers import center_window, PlaceholderEntry
 from utils.validators import validate_login
+from utils.styles import (
+    CREAM, CREAM_FIELD, GOLD, GOLD_HOV,
+    BG as PANEL_BLACK,
+    TEXT_DARK, TEXT_MUTED, TEXT_ON_GOLD,
+    SUCCESS, ERROR,
+    FONT_BRAND, FONT_H1, FONT_BODY, FONT_BOLD, FONT_SMALL,
+    ROLE_MAP,
+)
 
+# Logo Variable
+LOGO_PATH = "assets/Logo.png"
 
+# Fonts used
+_F_LABEL  = ("Segoe UI", 9)
+_F_ROLE   = ("Segoe UI", 10, "bold")
+_F_SUBMIT = ("Segoe UI", 12, "bold")
+_F_LINK   = ("Segoe UI", 10)
+
+# Class for the Login Page
 class FormalyLoginApp(tk.Tk):
+
+    # Setting the basic settings of the window
     def __init__(self, parent=None):
         super().__init__()
-
-        self.title("Formaly - Login")
-        self.configure(bg=BG)
+        self.title("Formaly ~ Login")
+        self.configure(bg=PANEL_BLACK)
         self.geometry("1200x700")
+        self.minsize(960, 600)
         self.resizable(True, True)
-
         center_window(self, 1200, 700)
-
-        self.current_user = None
+        self.current_user  = None
         self.selected_role = None
-        self.parent = parent
-        self.build_ui()
+        self.parent        = parent
+        self._pw_visible   = False
+        self._build()
 
-    def build_ui(self):
-        self.columnconfigure(0, weight=1)
+    # Setting up the layout of the page with two columns, left for logo and right for login form
+    def _build(self):
+        self.columnconfigure(0, weight=0, minsize=500)
         self.columnconfigure(1, weight=1)
         self.rowconfigure(0, weight=1)
+        self._build_left()
+        self._build_right()
 
-        self.build_left_panel()
-        self.build_right_panel()
+    # Left panel with logo
+    def _build_left(self):
+        panel = tk.Frame(self, bg=PANEL_BLACK, width=500)
+        panel.grid(row=0, column=0, sticky="nsew")
+        panel.grid_propagate(False)
+        panel.columnconfigure(0, weight=1)
+        panel.rowconfigure(0, weight=0)
+        panel.rowconfigure(1, weight=1)
 
-    def build_left_panel(self):
-        left = tk.Frame(self, bg=BG)
-        left.grid(row=0, column=0, sticky="nsew", padx=50, pady=50)
-        left.columnconfigure(0, weight=1)
-        left.rowconfigure(0, weight=1)
-        left.rowconfigure(1, weight=0)
-
-        logo_container = tk.Frame(left, bg=BG)
-        logo_container.grid(row=0, column=0, sticky="nsew")
-        logo_container.columnconfigure(0, weight=1)
-        logo_container.rowconfigure(0, weight=1)
-
-        logo_circle = tk.Frame(logo_container, bg=BG, width=365, height=315)
-        logo_circle.grid(row=0, column=0)
-        logo_circle.pack_propagate(False)
-
-        logo_image = tk.PhotoImage(file="assets/logo.png")
-        logo_label = tk.Label(logo_circle, image=logo_image, bg=BG)
-        logo_label.image = logo_image
-        logo_label.pack(expand=True)
-
-        branding = tk.Frame(left, bg=BG)
-        branding.grid(row=1, column=0, sticky="ew", pady=30)
-
+        # Title
         tk.Label(
-            branding,
-            text="FORMALY",
-            bg=BG,
-            fg="white",
-            font=TITLE
-        ).pack(anchor="center")
+            panel, text="Formaly",
+            bg=PANEL_BLACK, fg=GOLD,
+            font=FONT_BRAND, anchor="center"
+        ).grid(row=0, column=0, sticky="ew", padx=30, pady=(36, 0))
 
-        tk.Label(
-            branding,
-            text="Formal Management System",
-            bg=BG,
-            fg=SECONDARY,
-            font=SMALL
-        ).pack(anchor="center", pady=3)
+        # Logo Image
+        logo_frame = tk.Frame(panel, bg=PANEL_BLACK)
+        logo_frame.pack(fill="both", expand=True)
+        logo_frame.columnconfigure(0, weight=1)
+        logo_frame.rowconfigure(0, weight=1)
+        try:
+            self._logo = tk.PhotoImage(file=LOGO_PATH)
+            tk.Label(logo_frame, image=self._logo, bg=PANEL_BLACK
+                     ).grid(row=0, column=0)
+        except tk.TclError:
+            tk.Label(logo_frame, text="🎩", bg=PANEL_BLACK, fg=GOLD,
+                     font=("Segoe UI Emoji", 72)).grid(row=0, column=0)
 
-    def build_right_panel(self):
-        right = tk.Frame(self, bg=BG)
-        right.grid(row=0, column=1, sticky="nsew", padx=50, pady=50)
-        right.columnconfigure(0, weight=1)
-        right.rowconfigure(0, weight=1)
+    # Right panel with buttons and entry fields for login
+    # Creating the right section of the window
+    def _build_right(self):
+        panel = tk.Frame(self, bg=CREAM)
+        panel.grid(row=0, column=1, sticky="nsew")
+        panel.columnconfigure(0, weight=1)
+        panel.rowconfigure(0, weight=1)
 
-        card = tk.Frame(right, bg=CARD, relief="solid", borderwidth=1)
-        card.grid(row=0, column=0, sticky="nsew")
-        card.columnconfigure(0, weight=1)
+        form = tk.Frame(panel, bg=CREAM)
+        form.grid(row=0, column=0)
+        self._build_form(form)
 
-        content = tk.Frame(card, bg=CARD)
-        content.pack(fill="both", expand=True, padx=35, pady=28)
+    # Setting it as a form
+    def _build_form(self, f):
+        tk.Label(f, text="Log In", bg=CREAM, fg=TEXT_DARK,
+                 font=FONT_H1).pack(pady=(0, 6))
 
-        tk.Label(
-            content,
-            text="Welcome Back",
-            bg=CARD,
-            fg="white",
-            font=TITLE
-        ).pack(anchor="w", pady=(0, 2))
+        # Line with link to register page
+        row = tk.Frame(f, bg=CREAM)
+        row.pack()
+        tk.Label(row, text="Don't have an account? ", bg=CREAM,
+                 fg=TEXT_MUTED, font=_F_LINK).pack(side="left")
+        
+        # Link to register page
+        lnk = tk.Label(row, text="Sign up", bg=CREAM, fg=GOLD,
+                       font=(_F_LINK[0], _F_LINK[1], "bold"), cursor="hand2")
+        lnk.pack(side="left")
+        lnk.bind("<Button-1>", lambda e: self._open_register())
 
-        tk.Label(
-            content,
-            text="Sign in to continue",
-            bg=CARD,
-            fg=SECONDARY,
-            font=FONT
-        ).pack(anchor="w", pady=(0, 18))
+        # Back to normal text
+        tk.Label(row, text=" here", bg=CREAM, fg=TEXT_MUTED,
+                 font=_F_LINK).pack(side="left")
+        tk.Frame(f, bg=CREAM, height=18).pack()
 
-        tk.Label(
-            content,
-            text="Select Role",
-            bg=CARD,
-            fg="white",
-            font=FONT_BOLD
-        ).pack(anchor="w", pady=(0, 9))
+        # Role buttons
+        self._build_roles(f)
+        tk.Frame(f, bg=CREAM, height=20).pack()
 
-        role_frame = tk.Frame(content, bg=CARD)
-        role_frame.pack(anchor="w", pady=(0, 18))
+        # USERNAME field
+        self._spaced_label(f, "USERNAME")
+        usr_widget = tk.Entry(f, bg=CREAM_FIELD, fg=TEXT_MUTED,
+                              font=_F_LINK, relief="solid", bd=1,
+                              insertbackground=TEXT_DARK, width=50)
+        usr_widget.pack(ipady=12)
+        self._usr_ph = PlaceholderEntry(usr_widget, " Enter your username",
+                                        fg_normal=TEXT_DARK, fg_placeholder=TEXT_MUTED)
+        self._usr_widget = usr_widget
 
-        self.role_buttons = {}
-        for role in ["Admin", "Planner", "Support"]:
-            btn = tk.Button(
-                role_frame,
-                text=role,
-                bg=ENTRY,
-                fg=SECONDARY,
-                font=FONT,
-                border=1,
-                relief="solid",
-                cursor="hand2",
-                command=lambda r=role: self.select_role(r),
-                padx=14,
-                pady=7
-            )
-            btn.pack(side="left", padx=(0, 9))
-            self.role_buttons[role] = btn
+        tk.Frame(f, bg=CREAM, height=12).pack()
 
-        tk.Label(
-            content,
-            text="Username",
-            bg=CARD,
-            fg="white",
-            font=FONT_BOLD
-        ).pack(anchor="w", pady=(0, 7))
+        # PASSWORD field with eye toggle
+        self._spaced_label(f, "PASSWORD")
+        pw_container = tk.Frame(f, bg=CREAM_FIELD, bd=1, relief="solid")
+        pw_container.pack()
+        pw_widget = tk.Entry(pw_container, bg=CREAM_FIELD, fg=TEXT_MUTED,
+                             font=_F_LINK, relief="flat", bd=0, show="",
+                             insertbackground=TEXT_DARK, width=50)
+        pw_widget.pack(side="left", ipady=12, padx=(8, 0))
+        self._pw_ph = PlaceholderEntry(pw_widget, "Enter your password",
+                                       fg_normal=TEXT_DARK, fg_placeholder=TEXT_MUTED,
+                                       show_char="●")
+        self._pw_widget = pw_widget
+        eye = tk.Button(pw_container, text="👁", bg=CREAM_FIELD, fg=TEXT_MUTED,
+                        font=("Segoe UI Emoji", 11), relief="flat", bd=0,
+                        cursor="hand2", command=self._toggle_pw)
+        eye.pack(side="left", padx=(4, 8))
 
-        self.username_entry = tk.Entry(
-            content,
-            bg=ENTRY,
-            fg="white",
-            font=FONT,
-            border=1,
-            relief="solid",
-            insertbackground="white"
-        )
-        self.username_entry.pack(fill="x", pady=(0, 14), ipady=9)
-        self.username_entry.bind("<FocusIn>", self.on_focus_in)
-        self.username_entry.bind("<FocusOut>", self.on_focus_out)
+        # When enter key is pressed, it will trigger the login function
+        pw_widget.bind("<Return>", lambda e: self._do_login())
+        tk.Frame(f, bg=CREAM, height=26).pack()
 
-        tk.Label(
-            content,
-            text="Password",
-            bg=CARD,
-            fg="white",
-            font=FONT_BOLD
-        ).pack(anchor="w", pady=(0, 7))
-
-        self.password_entry = tk.Entry(
-            content,
-            bg=ENTRY,
-            fg="white",
-            font=FONT,
-            show="●",
-            border=1,
-            relief="solid",
-            insertbackground="white"
-        )
-        self.password_entry.pack(fill="x", pady=(0, 18), ipady=12)
-        self.password_entry.bind("<FocusIn>", self.on_focus_in)
-        self.password_entry.bind("<FocusOut>", self.on_focus_out)
-        self.password_entry.bind("<Return>", lambda e: self.login())
-
+        # Log in button
         self.login_btn = tk.Button(
-            content,
-            text="Sign In",
-            bg=PRIMARY,
-            fg="black",
-            font=FONT_BOLD,
-            command=self.login,
-            activebackground="#FFE066",
-            activeforeground="black",
-            border=0,
-            cursor="hand2"
+            f, text="Log in", bg=GOLD, fg=TEXT_ON_GOLD,
+            font=_F_SUBMIT, relief="flat", cursor="hand2", width=50,
+            activebackground=GOLD_HOV, activeforeground=TEXT_ON_GOLD,
+            command=self._do_login
         )
-        self.login_btn.pack(fill="x", pady=(0, 11), ipady=9)
+        self.login_btn.pack(ipady=13)
 
-        self.login_btn.bind("<Enter>", lambda e: self.login_btn.config(bg="#FFE066"))
-        self.login_btn.bind("<Leave>", lambda e: self.login_btn.config(bg=PRIMARY))
+        # Button hover effects
+        self.login_btn.bind("<Enter>", lambda e: self.login_btn.config(bg=GOLD_HOV))
+        self.login_btn.bind("<Leave>", lambda e: self.login_btn.config(bg=GOLD))
 
-        link_frame = tk.Frame(content, bg=CARD)
-        link_frame.pack(anchor="center", pady=(0, 11))
+        # Status on login process line
+        self.status_lbl = tk.Label(f, text="", bg=CREAM, fg=ERROR,
+                                   font=FONT_SMALL, wraplength=440)
+        self.status_lbl.pack(pady=(8, 0))
 
-        tk.Label(link_frame, text="Don't have an account? ", bg=CARD, fg=SECONDARY, font=FONT).pack(side="left")
+    # This function creates the role selection buttons
+    def _build_roles(self, parent):
+        row = tk.Frame(parent, bg=CREAM)
+        row.pack()
+        self._role_btns = {}
 
-        register_link = tk.Label(
-            link_frame,
-            text="Register",
-            bg=CARD,
-            fg=PRIMARY,
-            font=FONT_BOLD,
-            cursor="hand2"
-        )
-        register_link.pack(side="left")
-        register_link.bind("<Button-1>", lambda e: self.open_register())
+        # This sets a button for each role
+        for role in ("Admin", "Planner", "Support"):
+            btn = tk.Button(
+                row, text=role.upper(), bg=GOLD, fg=TEXT_ON_GOLD,
+                font=_F_ROLE, relief="flat", cursor="hand2", width=13,
+                activebackground=GOLD_HOV, activeforeground=TEXT_ON_GOLD,
+                command=lambda r=role: self._select_role(r)
+            )
+            btn.pack(side="left", padx=5, ipady=11)
+            self._role_btns[role] = btn
 
-        self.status_label = tk.Label(
-            content,
-            text="",
-            bg=CARD,
-            fg=ERROR,
-            font=SMALL,
-            wraplength=280
-        )
-        self.status_label.pack(anchor="w", pady=(0, 0))
-
-    def on_focus_in(self, event):
-        widget = event.widget
-        if isinstance(widget, tk.Entry):
-            widget.config(relief="solid", borderwidth=2)
-
-    def on_focus_out(self, event):
-        widget = event.widget
-        if isinstance(widget, tk.Entry):
-            widget.config(relief="solid", borderwidth=1)
-
-    def select_role(self, role):
+    # This function manages the state of the role selection buttons, ensuring only one can be active at a time
+    def _select_role(self, role):
         self.selected_role = role
-        for btn_role, btn in self.role_buttons.items():
-            if btn_role == role:
-                btn.config(bg=PRIMARY, fg="black")
-            else:
-                btn.config(bg=ENTRY, fg=SECONDARY)
+        for r, btn in self._role_btns.items():
+            btn.config(bg=GOLD_HOV if r == role else GOLD,
+                       relief="sunken" if r == role else "flat")
 
-    def login(self):
+    # This function creates the confirm password field in the registration page
+    def _spaced_label(self, parent, text):
+        tk.Label(parent, text=text, bg=CREAM, fg=TEXT_MUTED,
+                 font=_F_LABEL).pack(pady=(0, 5))
+
+    # This function toggles the visibility of the password field when the eye icon is clicked
+    def _toggle_pw(self):
+        if self._pw_ph.is_placeholder():
+            return
+        self._pw_visible = not self._pw_visible
+        self._pw_widget.config(show="" if self._pw_visible else "●")
+
+    # This function manages the login process when the login button is clicked
+    def _do_login(self):
         if not self.selected_role:
-            self.show_status("Please select a role.", ERROR)
+            self._show_status("Please select a role.", ERROR)
             return
 
-        username = self.username_entry.get().strip()
-        password = self.password_entry.get()
+        # Read and validate inputs
+        username = self._usr_ph.get_value()
+        password = self._pw_ph.get_value()
 
-        valid, msg = validate_login(username, password)
-        if not valid:
-            self.show_status(msg, ERROR)
+        # Validate inputs before attempting login
+        ok, msg = validate_login(username, password)
+        if not ok:
+            self._show_status(msg, ERROR)
             return
 
+        # gets the account from the database
         try:
             user = get_user(username, password)
+        except Exception as exc:
+            self._show_status(f"Database error: {exc}", ERROR)
+            return
 
-            if not user:
-                self.show_status("Invalid username or password.", ERROR)
-                return
+        # If no user is found with the provided credentials, show an error message
+        if not user:
+            self._show_status("Incorrect username or password.", ERROR)
+            return
 
-            db_role = user[5].strip().lower()
+        # Check if the user's role matches the selected role
+        db_role  = str(user["Role"]).strip().lower()
+        expected = ROLE_MAP.get(self.selected_role, "")
 
-            # UI role → database role mapping
-            role_map = {
-                "admin": "admin",
-                "planner": "planner",
-                "support": "helper"
-            }
+        # If the role from the database doesn't match the expected role based on the button selection, show an error message
+        if db_role != expected:
+            self._show_status("Account not authorised for the selected role.", ERROR)
+            return
 
-            selected_role_db = role_map.get(self.selected_role.lower())
-            if db_role != selected_role_db:
-                self.show_status("This account is not authorized for the selected role.", ERROR)
-                return
+        # If all checks pass, set the current user and open the appropriate dashboard based on their role
+        self.current_user = user
+        self._show_status("Login successful!", SUCCESS)
+        self.after(500, lambda: self._open_dashboard(db_role))
 
-            self.current_user = user
-            self.show_status("Login successful!", SUCCESS)
-            self.after(500, lambda: self.open_dashboard(selected_role_db))
-
-        except Exception as e:
-            self.show_status(f"Error: {str(e)}", ERROR)
-
-    def open_dashboard(self, role):
+    # This function opens the dashboard corresponding to the user's role
+    def _open_dashboard(self, role):
         try:
+            # Depending on the role, it imports and opens the corresponding dashboard page
             if role == "admin":
                 from pages.admin.admin_dashboard import AdminDashboard
-                dashboard = AdminDashboard(self, user=self.current_user)
+                dash = AdminDashboard(self, user=self.current_user)
             elif role == "planner":
                 from pages.planner.planner_dashboard import PlannerDashboard
-                dashboard = PlannerDashboard(self, user=self.current_user)
+                dash = PlannerDashboard(self, user=self.current_user)
             elif role == "helper":
                 from pages.support.support_dashboard import SupportDashboard
-                dashboard = SupportDashboard(self, user=self.current_user)
+                dash = SupportDashboard(self, user=self.current_user)
             else:
-                self.show_status(f"Unknown role: {role}", ERROR)
+                self._show_status(f"Unknown role: {role}", ERROR)
                 return
-            self.status_label.config(text="")
             
-            dashboard.place(relwidth=1, relheight=1)
-            dashboard.lift()
+            # If the dashboard opens successfully, the login window is hidden and the dashboard is shown
+            self.status_lbl.config(text="")
+            dash.place(relwidth=1, relheight=1)
+            dash.lift()
 
-        except Exception as e:
-            self.show_status(f"Error: {str(e)}", ERROR)
+        # If there's an error while opening the dashboard, it shows an error message
+        except Exception as exc:
+            self._show_status(f"Error opening dashboard: {exc}", ERROR)
 
-    def open_register(self):
+    # This function opens the registration page when the "Sign up" link is clicked
+    def _open_register(self):
         try:
             from pages.login.formaly_register import FormalyRegisterApp
-            register = FormalyRegisterApp(self)
+            FormalyRegisterApp(self)
             self.withdraw()
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to open register page: {str(e)}")
+        except Exception as exc:
+            messagebox.showerror("Error", f"Could not open register: {exc}")
 
-    def show_status(self, message, color):
-        self.status_label.config(text=message, fg=color)
-        if color == SUCCESS:
-            self.after(2000, lambda: self.status_label.config(text=""))
+    # This function updates the status label with a message and colour
+    def _show_status(self, msg, colour):
+        self.status_lbl.config(text=msg, fg=colour)
+        if colour == SUCCESS:
+            self.after(2000, lambda: self.status_lbl.config(text=""))

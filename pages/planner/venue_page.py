@@ -1,284 +1,170 @@
-# pages/planner/venue_suggestion_page.py
-
 import tkinter as tk
 from tkinter import ttk, messagebox
 import sqlite3
-
 from utils.styles import (
-    BG, CARD, ENTRY, PRIMARY, SECONDARY, SUCCESS, ERROR, BORDER,
-    FONT, FONT_BOLD, TITLE, SUBTITLE, SMALL, PADDING_X, PADDING_Y
+    BG, CARD, ENTRY, BORDER, GOLD, GOLD_HOV,
+    TEXT_LIGHT, TEXT_MUTED, ERROR, SUCCESS,
+    FONT_BODY, FONT_BOLD, FONT_H3, FONT_SMALL,
 )
-from utils.helpers import clear_frame, truncate_text
+from utils.widgets import build_subpage_header, scrollable_frame, make_modal, modal_field, navigate
+from utils.helpers import truncate_text, clear_frame
+
 
 class VenueSuggestionPage(tk.Frame):
-    def __init__(self, parent, user=None):
+    def __init__(self, parent, controller=None, user=None):
         super().__init__(parent, bg=BG)
         self.parent = parent
-        self.user = user
-        
-        self.search_query = ""
-        self.setup_layout()
+        self.user   = user
+        self._imgs  = []
+        self._build()
 
-    def setup_layout(self):
-        self.grid_rowconfigure(0, weight=1)
-        self.grid_columnconfigure(1, weight=1)
+    def _back(self):
+        navigate(self, self.parent, "planner", self.user)
 
-        # Sidebar Component
-        self.sidebar = tk.Frame(self, bg=CARD, width=260, bd=0)
-        self.sidebar.grid(row=0, column=0, sticky="nsew")
-        self.sidebar.grid_propagate(False)
-        
-        # Workspace Wrapper Panel
-        self.main_content = tk.Frame(self, bg=BG)
-        self.main_content.grid(row=0, column=1, sticky="nsew", padx=PADDING_X, pady=PADDING_Y)
-        self.main_content.grid_rowconfigure(2, weight=1)
-        self.main_content.grid_columnconfigure(0, weight=1)
+    def _build(self):
+        self.rowconfigure(1, weight=1)
+        self.columnconfigure(0, weight=1)
 
-        from pages.planner.planner_dashboard import PlannerDashboard
-        PlannerDashboard.render_sidebar(self, "Venue Suggestions")
-        self.render_venue_workspace()
+        build_subpage_header(self, "VENUE OPTIONS", self._back, self._imgs)
 
-    def render_venue_workspace(self):
-        clear_frame(self.main_content)
-        
-        # Action Bar Top Section
-        top_bar = tk.Frame(self.main_content, bg=BG)
-        top_bar.grid(row=0, column=0, sticky="ew", pady=(0, 20))
+        body = tk.Frame(self, bg=BG)
+        body.pack(fill="both", expand=True)
+        body.rowconfigure(0, weight=1)
+        body.columnconfigure(0, weight=1)
 
-        # Matrix Grid Scroll Frame Wrapper Layout
-        canvas_container = tk.Frame(self.main_content, bg=BG)
-        canvas_container.grid(row=2, column=0, sticky="nsew")
-        canvas_container.grid_rowconfigure(0, weight=1)
-        canvas_container.grid_columnconfigure(0, weight=1)
+        self._scroll_inner = scrollable_frame(body)
+        self._scroll_inner.columnconfigure((0, 1), weight=1, uniform="eq")
+        self._refresh()
 
-        self.canvas = tk.Canvas(canvas_container, bg=BG, bd=0, highlightthickness=0)
-        scrollbar = ttk.Scrollbar(canvas_container, orient="vertical", command=self.canvas.yview)
-        
-        self.scroll_frame = tk.Frame(self.canvas, bg=BG)
-        self.scroll_frame.bind(
-            "<Configure>",
-            lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all"))
-        )
-        
-        self.canvas_window = self.canvas.create_window((0, 0), window=self.scroll_frame, anchor="nw")
-        self.canvas.configure(yscrollcommand=scrollbar.set)
-        
-        self.canvas.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
-        
-        self.canvas.bind("<Configure>", lambda e: self.canvas.itemconfig(self.canvas_window, width=e.width))
-
-        self.display_venues()
-
-    def update_search(self, event):
-        self.search_query = self.search_ent.get()
-        self.display_venues()
-
-    def display_venues(self):
-        clear_frame(self.scroll_frame)
-        self.scroll_frame.grid_columnconfigure((0, 1), weight=1, uniform="equal")
+    def _refresh(self):
+        clear_frame(self._scroll_inner)
 
         conn = sqlite3.connect("database/formaly.db")
-        cursor = conn.cursor()
-        
-        query = "SELECT id, name, address, capacity, estimated_cost, notes, status FROM venues WHERE 1=1"
-        params = []
-
-        if self.search_query:
-            query += " AND (name LIKE ? OR address LIKE ? OR notes LIKE ?)"
-            params.extend([f"%{self.search_query}%", f"%{self.search_query}%", f"%{self.search_query}%"])
-
-        query += " ORDER BY id DESC"
-        cursor.execute(query, params)
-        venues = cursor.fetchall()
+        cur  = conn.cursor()
+        cur.execute("SELECT id, name, address, capacity, estimated_cost, notes, status FROM venues ORDER BY id")
+        venues = cur.fetchall()
         conn.close()
 
         if not venues:
-            empty_lbl = tk.Label(self.scroll_frame, text="No items logged in database indices.", font=SUBTITLE, fg=SECONDARY, bg=BG)
-            empty_lbl.grid(row=0, column=0, columnspan=2, pady=60)
+            tk.Label(self._scroll_inner, text="No venues found.", bg=BG, fg=TEXT_MUTED,
+                     font=FONT_H3).grid(row=0, column=0, columnspan=2, pady=60)
             return
 
         for idx, (vid, name, addr, cap, cost, notes, status) in enumerate(venues):
-            r = idx // 2
-            c = idx % 2
-            
-            card_border = tk.Frame(self.scroll_frame, bg=BORDER, padx=1, pady=1)
-            card_border.grid(row=r, column=c, padx=8, pady=8, sticky="nsew")
-            
-            card = tk.Frame(card_border, bg=CARD, padx=16, pady=16)
-            card.pack(fill="both", expand=True)
-            card.grid_rowconfigure(3, weight=1)
-            card.grid_columnconfigure(0, weight=1)
+            r, c = divmod(idx, 2)
+            card = tk.Frame(self._scroll_inner, bg=CARD)
+            card.grid(row=r, column=c, padx=10, pady=10, sticky="nsew")
 
-            # Header details
-            title_row = tk.Frame(card, bg=CARD)
-            title_row.pack(fill="x", pady=(0, 6))
-            
-            n_lbl = tk.Label(title_row, text=truncate_text(name, 22), font=FONT_BOLD, fg=PRIMARY, bg=CARD)
-            n_lbl.pack(side="left", anchor="w")
-            
-            s_color = SUCCESS if status == "Approved" else (ERROR if status == "Rejected" else SECONDARY)
-            s_badge = tk.Label(title_row, text=f" {status} ", font=SMALL, fg=CARD, bg=s_color, padx=4)
-            s_badge.pack(side="right")
+            # Title
+            tk.Label(card, text=f"Venue #{idx+1}", bg=CARD, fg=GOLD,
+                     font=FONT_H3, anchor="w").pack(fill="x", padx=16, pady=(14, 2))
+            tk.Label(card, text=truncate_text(name, 40), bg=CARD, fg=TEXT_LIGHT,
+                     font=FONT_BOLD, anchor="w").pack(fill="x", padx=16)
+            tk.Label(card, text=truncate_text(addr or "—", 50), bg=CARD, fg=TEXT_MUTED,
+                     font=FONT_SMALL, anchor="w").pack(fill="x", padx=16, pady=(0, 8))
 
-            a_lbl = tk.Label(card, text=truncate_text(addr, 40), font=SMALL, fg=SECONDARY, bg=CARD)
-            a_lbl.pack(anchor="w", pady=(0, 10))
+            # Capacity / cost bar
+            spec = tk.Frame(card, bg=ENTRY)
+            spec.pack(fill="x", padx=16, pady=(0, 8))
+            tk.Label(spec, text=f"Capacity: {cap} Guests", bg=ENTRY, fg=TEXT_LIGHT,
+                     font=FONT_SMALL).pack(side="left", padx=8, pady=6)
+            tk.Label(spec, text=f"${cost:,.2f}", bg=ENTRY, fg=GOLD,
+                     font=FONT_BOLD).pack(side="right", padx=8)
 
-            # Numeric Spec Metrics
-            specs_frame = tk.Frame(card, bg=BG, padx=10, pady=8)
-            specs_frame.pack(fill="x", pady=(0, 10))
-            
-            cap_lbl = tk.Label(specs_frame, text=f"Capacity: {cap} guests", font=FONT, fg=PRIMARY, bg=BG)
-            cap_lbl.pack(side="left")
-            
-            cost_lbl = tk.Label(specs_frame, text=f"${cost:,.2f}", font=FONT_BOLD, fg=SUCCESS, bg=BG)
-            cost_lbl.pack(side="right")
+            # Notes
+            tk.Label(card, text=truncate_text(notes or "No description.", 100),
+                     bg=CARD, fg=TEXT_MUTED, font=FONT_SMALL,
+                     anchor="w", wraplength=360, justify="left").pack(fill="x", padx=16, pady=(0, 10))
 
-            # Description notes block
-            n_txt = tk.Label(card, text=truncate_text(notes, 120) if notes else "No notes logged for profile.",
-                             font=FONT, fg=SECONDARY, bg=CARD, justify="left", wraplength=300)
-            n_txt.pack(anchor="w", fill="both", expand=True, pady=(0, 14))
+            # Calendar icon placeholder
+            tk.Label(card, text="📅", bg=CARD, font=("Segoe UI Emoji", 28)).pack(anchor="w", padx=16, pady=(0, 8))
 
-            # Control button layout split line
-            sep = tk.Frame(card, bg=BORDER, height=1)
-            sep.pack(fill="x", pady=(0, 12))
+            # Actions
+            act = tk.Frame(card, bg=CARD)
+            act.pack(fill="x", padx=16, pady=(0, 14))
 
-            actions_bar = tk.Frame(card, bg=CARD)
-            actions_bar.pack(fill="x")
+            approve_btn = tk.Button(act, text="Approve", bg=SUCCESS, fg=TEXT_LIGHT,
+                                    font=FONT_BOLD, relief="flat", cursor="hand2",
+                                    padx=14, pady=6,
+                                    command=lambda vid=vid: self._set_status(vid, "Approved"))
+            approve_btn.pack(side="left", padx=(0, 6))
 
-            edit_btn = tk.Button(
-                actions_bar, text="Modify Profile", font=SMALL, fg=CARD, bg=PRIMARY,
-                activebackground=BG, activeforeground=PRIMARY, bd=0, relief="flat", padx=10, pady=4,
-                command=lambda val_id=vid, n=name, a=addr, cp=cap, cs=cost, nt=notes, st=status: self.open_venue_modal(val_id, n, a, cp, cs, nt, st)
-            )
-            edit_btn.pack(side="left", padx=2)
+            edit_btn = tk.Button(act, text="Edit", bg=ERROR, fg=TEXT_LIGHT,
+                                 font=FONT_BOLD, relief="flat", cursor="hand2",
+                                 padx=14, pady=6,
+                                 command=lambda vid=vid, n=name, a=addr, cp=cap,
+                                         cs=cost, nt=notes, st=status:
+                                         self._open_modal(vid, n, a, cp, cs, nt, st))
+            edit_btn.pack(side="left")
 
-            del_btn = tk.Button(
-                actions_bar, text="Delete", font=SMALL, fg=CARD, bg=ERROR,
-                activebackground=BG, activeforeground=ERROR, bd=0, relief="flat", padx=10, pady=4,
-                command=lambda val_id=vid: self.delete_venue(val_id)
-            )
-            del_btn.pack(side="right", padx=2)
+    def _set_status(self, vid, status):
+        conn = sqlite3.connect("database/formaly.db")
+        conn.execute("UPDATE venues SET status=? WHERE id=?", (status, vid))
+        conn.commit(); conn.close()
+        self._refresh()
 
-    def delete_venue(self, venue_id):
-        if messagebox.askyesno("Confirm Action", "Are you sure you want to remove this venue from records?"):
-            conn = sqlite3.connect("database/formaly.db")
-            cursor = conn.cursor()
-            cursor.execute("DELETE FROM venues WHERE id = ?", (venue_id,))
-            conn.commit()
-            conn.close()
-            self.display_venues()
+    def _open_modal(self, vid=None, name="", addr="", cap=100,
+                    cost=0.0, notes="", status="Under Review"):
+        m = make_modal(self, "Edit Venue" if vid else "Add Venue", 480, 560)
+        f = tk.Frame(m, bg=BG, padx=22, pady=22)
+        f.pack(fill="both", expand=True)
 
-    def open_venue_modal(self, venue_id=None, name="", address="", capacity=100, cost=0.0, notes="", status="Under Review"):
-        modal = tk.Toplevel(self)
-        modal.title("Venue Matrix Profile Configuration Editor")
-        modal.geometry("480x580")
-        modal.configure(bg=BG)
-        modal.transient(self)
-        modal.grab_set()
-        modal.resizable(False, False)
+        n_ent  = modal_field(f, "Name",    name)
+        a_ent  = modal_field(f, "Address", addr)
 
-        container = tk.Frame(modal, bg=BG, padx=24, pady=24)
-        container.pack(fill="both", expand=True)
+        row = tk.Frame(f, bg=BG)
+        row.pack(fill="x", pady=(10, 0))
+        row.columnconfigure((0, 1), weight=1)
 
-        header_lbl = tk.Label(container, text="Venue Data Profile Workspace" if venue_id else "Register Venue Profile Asset", font=SUBTITLE, fg=PRIMARY, bg=BG)
-        header_lbl.pack(anchor="w", pady=(0, 16))
+        tk.Label(row, text="Capacity", bg=BG, fg=GOLD, font=FONT_BOLD).grid(row=0, column=0, sticky="w")
+        cap_border = tk.Frame(row, bg=BORDER, padx=1, pady=1)
+        cap_border.grid(row=1, column=0, sticky="ew", padx=(0, 6), pady=4)
+        cap_ent = tk.Entry(cap_border, bg=ENTRY, fg=TEXT_LIGHT, font=FONT_BODY, bd=0,
+                           insertbackground=TEXT_LIGHT)
+        cap_ent.pack(fill="x", padx=6, pady=5)
+        cap_ent.insert(0, str(cap))
 
-        # Forms Setup
-        tk.Label(container, text="Venue Title Designation Name", font=FONT_BOLD, fg=PRIMARY, bg=BG).pack(anchor="w", pady=(6, 2))
-        n_border = tk.Frame(container, bg=BORDER, padx=1, pady=1)
-        n_border.pack(fill="x")
-        name_ent = tk.Entry(n_border, font=FONT, bg=ENTRY, fg=PRIMARY, bd=0)
-        name_ent.pack(fill="x", padx=8, pady=6)
-        name_ent.insert(0, name)
-
-        tk.Label(container, text="Physical Address Info Location", font=FONT_BOLD, fg=PRIMARY, bg=BG).pack(anchor="w", pady=(10, 2))
-        a_border = tk.Frame(container, bg=BORDER, padx=1, pady=1)
-        a_border.pack(fill="x")
-        addr_ent = tk.Entry(a_border, font=FONT, bg=ENTRY, fg=PRIMARY, bd=0)
-        addr_ent.pack(fill="x", padx=8, pady=6)
-        addr_ent.insert(0, address)
-
-        numerical_row = tk.Frame(container, bg=BG)
-        numerical_row.pack(fill="x", pady=(10, 0))
-        numerical_row.grid_columnconfigure((0, 1), weight=1)
-
-        cap_frame = tk.Frame(numerical_row, bg=BG)
-        cap_frame.grid(row=0, column=0, sticky="ew", padx=(0, 6))
-        tk.Label(cap_frame, text="Max Occupancy Cap", font=FONT_BOLD, fg=PRIMARY, bg=BG).pack(anchor="w")
-        cap_border = tk.Frame(cap_frame, bg=BORDER, padx=1, pady=1)
-        cap_border.pack(fill="x", pady=4)
-        cap_ent = tk.Entry(cap_border, font=FONT, bg=ENTRY, fg=PRIMARY, bd=0)
-        cap_ent.pack(fill="x", padx=8, pady=6)
-        cap_ent.insert(0, str(capacity))
-
-        cost_frame = tk.Frame(numerical_row, bg=BG)
-        cost_frame.grid(row=0, column=1, sticky="ew", padx=(6, 0))
-        tk.Label(cost_frame, text="Estimated Cost Summary", font=FONT_BOLD, fg=PRIMARY, bg=BG).pack(anchor="w")
-        cost_border = tk.Frame(cost_frame, bg=BORDER, padx=1, pady=1)
-        cost_border.pack(fill="x", pady=4)
-        cost_ent = tk.Entry(cost_border, font=FONT, bg=ENTRY, fg=PRIMARY, bd=0)
-        cost_ent.pack(fill="x", padx=8, pady=6)
+        tk.Label(row, text="Estimated Cost", bg=BG, fg=GOLD, font=FONT_BOLD).grid(row=0, column=1, sticky="w")
+        cost_border = tk.Frame(row, bg=BORDER, padx=1, pady=1)
+        cost_border.grid(row=1, column=1, sticky="ew", padx=(6, 0), pady=4)
+        cost_ent = tk.Entry(cost_border, bg=ENTRY, fg=TEXT_LIGHT, font=FONT_BODY, bd=0,
+                            insertbackground=TEXT_LIGHT)
+        cost_ent.pack(fill="x", padx=6, pady=5)
         cost_ent.insert(0, str(cost))
 
-        tk.Label(container, text="Verification Workflow Evaluation Status", font=FONT_BOLD, fg=PRIMARY, bg=BG).pack(anchor="w", pady=(10, 2))
+        tk.Label(f, text="Status", bg=BG, fg=GOLD, font=FONT_BOLD, anchor="w").pack(fill="x", pady=(10, 2))
         s_var = tk.StringVar(value=status)
-        s_cb = ttk.Combobox(container, textvariable=s_var, values=["Under Review", "Approved", "Rejected"], state="readonly")
-        s_cb.pack(fill="x", pady=4)
+        ttk.Combobox(f, textvariable=s_var,
+                     values=["Under Review","Approved","Rejected"],
+                     state="readonly").pack(fill="x", pady=(0, 4))
 
-        tk.Label(container, text="Profile Logs Review Description Notes", font=FONT_BOLD, fg=PRIMARY, bg=BG).pack(anchor="w", pady=(10, 2))
-        nt_border = tk.Frame(container, bg=BORDER, padx=1, pady=1)
-        nt_border.pack(fill="x")
-        notes_txt = tk.Text(nt_border, font=FONT, bg=ENTRY, fg=PRIMARY, bd=0, height=3, highlightthickness=0)
-        notes_txt.pack(fill="x", padx=8, pady=6)
-        notes_txt.insert("1.0", notes)
+        nt_ent = modal_field(f, "Notes", notes, height=3)
 
-        # Footer Button Layout Control Frame
-        actions_panel = tk.Frame(container, bg=BG)
-        actions_panel.pack(fill="x", side="bottom", pady=(16, 0))
-
-        def commit_save():
-            n_val = name_ent.get().strip()
-            a_val = addr_ent.get().strip()
-            nt_val = notes_txt.get("1.0", "end-1c").strip()
-            s_val = s_var.get()
-            
+        def _save():
+            n = n_ent.get().strip()
+            if not n:
+                messagebox.showerror("Error", "Name is required."); return
             try:
-                cap_val = int(cap_ent.get().strip())
-                cost_val = float(cost_ent.get().strip())
+                cp = int(cap_ent.get()); cs = float(cost_ent.get())
             except ValueError:
-                messagebox.showerror("Validation Formatting Error", "Capacity must evaluate to integer, Cost must match structural decimal standard values.")
-                return
-
-            if not n_val:
-                messagebox.showerror("Validation Error", "Venue Designation Title Field cannot resolve as blank.")
-                return
-
+                messagebox.showerror("Error", "Capacity must be integer, cost must be number."); return
+            nt = nt_ent.get("1.0", "end-1c").strip()
             conn = sqlite3.connect("database/formaly.db")
-            cursor = conn.cursor()
-            if venue_id:
-                cursor.execute("""
-                    UPDATE venues SET name=?, address=?, capacity=?, estimated_cost=?, notes=?, status=? WHERE id=?
-                """, (n_val, a_val, cap_val, cost_val, nt_val, s_val, venue_id))
+            cur  = conn.cursor()
+            if vid:
+                cur.execute("UPDATE venues SET name=?,address=?,capacity=?,estimated_cost=?,notes=?,status=? WHERE id=?",
+                            (n, a_ent.get().strip(), cp, cs, nt, s_var.get(), vid))
             else:
-                cursor.execute("""
-                    INSERT INTO venues (name, address, capacity, estimated_cost, notes, status) VALUES (?, ?, ?, ?, ?, ?)
-                """, (n_val, a_val, cap_val, cost_val, nt_val, s_val))
-            conn.commit()
-            conn.close()
-            modal.destroy()
-            self.display_venues()
+                cur.execute("INSERT INTO venues (name,address,capacity,estimated_cost,notes,status) VALUES (?,?,?,?,?,?)",
+                            (n, a_ent.get().strip(), cp, cs, nt, s_var.get()))
+            conn.commit(); conn.close()
+            m.destroy(); self._refresh()
 
-        submit_btn = tk.Button(
-            actions_panel, text="Publish Document Profile", font=FONT_BOLD, fg=CARD, bg=PRIMARY,
-            activebackground=SECONDARY, activeforeground=CARD, bd=0, relief="flat", padx=16, pady=8,
-            command=commit_save
-        )
-        submit_btn.pack(side="right")
-
-        cancel_btn = tk.Button(
-            actions_panel, text="Dismiss", font=FONT_BOLD, fg=PRIMARY, bg=BG,
-            activebackground=BORDER, activeforeground=PRIMARY, bd=0, relief="flat", padx=16, pady=8,
-            command=modal.destroy
-        )
-        cancel_btn.pack(side="right", padx=12)
+        btns = tk.Frame(f, bg=BG)
+        btns.pack(fill="x", pady=(14, 0))
+        tk.Button(btns, text="Save", bg=GOLD, fg=TEXT_LIGHT, font=FONT_BOLD,
+                  relief="flat", cursor="hand2", activebackground=GOLD_HOV,
+                  padx=16, pady=8, command=_save).pack(side="right")
+        tk.Button(btns, text="Cancel", bg=ENTRY, fg=TEXT_LIGHT, font=FONT_BODY,
+                  relief="flat", cursor="hand2",
+                  padx=16, pady=8, command=m.destroy).pack(side="right", padx=(0, 8))

@@ -1,234 +1,194 @@
 import tkinter as tk
-import os
-
-# Architecture Imports (No external libraries)
-from utils.styles import *
-from utils.helpers import (
-    center_window, 
-    clear_frame, 
-    format_date, 
-    truncate_text, 
-    disable_widget, 
-    enable_widget
+from tkinter import messagebox
+import sqlite3
+from database.formaly_database_manager import get_formal_data
+from utils.styles import (
+    BG, CARD, ENTRY, BORDER, GOLD, GOLD_HOV,
+    TEXT_LIGHT, TEXT_MUTED,
+    FONT_BODY, FONT_BOLD, FONT_H2, FONT_H3, FONT_SMALL,
 )
-from utils.validators import *
+from utils.widgets import build_sidebar, build_header, navigate, HEADER_H, HDR_BG, LOGO_PATH
+
+_NAV     = ["Invitation", "Feedback"]
+_NAV_MAP = {"Invitation": "invitation", "Feedback": "feedback"}
+
+_FIELD_BG = "#3A3A3A"   # light-grey field bg from mockup
 
 
 class FormalInvitationPage(tk.Frame):
-    def __init__(self, parent, controller=None, *args, **kwargs):
-        super().__init__(parent, bg=BG, *args, **kwargs)
-        self.controller = controller
-        
-        # Native Tkinter image reference to prevent garbage collection
-        self.logo_image = None
-        
-        # Center the visual invitation canvas inside the parent frame
-        self.container = tk.Frame(self, bg=BG)
-        self.container.pack(expand=True, padx=PADDING_X, pady=PADDING_Y)
-        
-        self.build_page()
+    def __init__(self, parent, controller=None, user=None):
+        super().__init__(parent, bg=BG)
+        self.parent = parent
+        self.user   = user
+        self._imgs  = []
+        self._plus_visible = False
+        self._build()
 
-    # -------------------------------------------------------------------------
-    # Core Layout Builders
-    # -------------------------------------------------------------------------
+    def _build(self):
+        formal = get_formal_data()
 
-    def build_page(self):
-        """Assembles the full invitation utilizing structural visual components."""
-        clear_frame(self.container)  # Clean the frame dynamically using architecture helper
-        
-        self.create_header_with_logo()
-        self.create_hero_section()
-        self.create_divider(self.container)
-        self.create_invitation_card()
-        self.create_divider(self.container)
-        self.create_rsvp_section()
-        self.create_feedback_section()
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(1, weight=1)
 
-    def create_header_with_logo(self):
-        """Constructs the top header area with the formal invitation title and logo."""
-        header_frame = tk.Frame(self.container, bg=BG)
-        tk.Label(
-            header_frame, 
-            text="Official Formal Invitation", 
-            font=SMALL, 
-            bg=BG, 
-            fg=SECONDARY
-        ).pack()
+        build_sidebar(self, _NAV, "Invitation",
+                      lambda t: navigate(self, self.parent, _NAV_MAP.get(t, t), self.user),
+                      self._imgs)
 
-    def create_hero_section(self):
-        """Highlights the hosting school and the prestigious theme title."""
-        hero_frame = tk.Frame(self.container, bg=BG)
-        hero_frame.pack(fill="x", pady=PADDING_Y)
-        
-        # Prominent School Presenter Text
-        tk.Label(
-            hero_frame, 
-            text="EPPING BOYS HIGH SCHOOL", 
-            font=SUBTITLE, 
-            bg=BG,
-            fg=PRIMARY
-        ).pack()
-        
-        tk.Label(
-            hero_frame, 
-            text="Presents", 
-            font=FONT, 
-            bg=BG,
-            fg=SECONDARY
-        ).pack(pady=PADDING_Y // 2)
-        
-        # Main Formal Title Event Focal Point
-        tk.Label(
-            hero_frame, 
-            text="EPPING FORMAL 2026", 
-            font=TITLE, 
-            bg=BG,
-            fg=PRIMARY
-        ).pack(pady=PADDING_Y)
+        # Header — title "Attendee" in white (mockup shows white, not gold)
+        bar = tk.Frame(self, bg=HDR_BG, height=HEADER_H)
+        bar.grid(row=0, column=1, sticky="new")
+        bar.grid_propagate(False)
+        try:
+            img = tk.PhotoImage(file=LOGO_PATH)
+            self._imgs.append(img)
+            tk.Label(bar, image=img, bg=HDR_BG).pack(side="left", padx=(20, 0))
+        except tk.TclError:
+            pass
+        mid = tk.Frame(bar, bg=HDR_BG)
+        mid.pack(side="left", padx=24, expand=True, fill="both")
+        tk.Label(mid, text="Attendee", bg=HDR_BG, fg=TEXT_LIGHT,
+                 font=FONT_H2, anchor="w").pack(anchor="w", pady=(28, 0))
+        icons = tk.Frame(bar, bg=HDR_BG)
+        icons.pack(side="right", padx=24)
+        tk.Label(icons, text="🔔", bg=HDR_BG, fg=TEXT_LIGHT, font=("Segoe UI Emoji", 18)).pack(side="left", padx=6)
+        tk.Label(icons, text="👤", bg=HDR_BG, fg=GOLD,       font=("Segoe UI Emoji", 22)).pack(side="left", padx=6)
 
-    def create_invitation_card(self):
-        """Constructs the formal detail card wrapper."""
-        card_frame = tk.Frame(
-            self.container, 
-            bg=CARD, 
-            padx=PADDING_X * 2, 
-            pady=PADDING_Y * 2,
-            highlightbackground=BORDER,
-            highlightthickness=1
-        )
-        card_frame.pack(fill="x", pady=PADDING_Y)
-        
-        self.create_section_title(card_frame, "EVENT INFORMATION")
+        # Right content area
+        right = tk.Frame(self, bg=BG)
+        right.grid(row=0, column=1, sticky="nsew")
+        right.rowconfigure(1, weight=1)
+        right.columnconfigure(0, weight=1)
 
-        # Utilize format_date helper to render localized elegant date formatting
-        formal_date = format_date("2026-12-12") if "format_date" in globals() else "12 December 2026"
-        
-        details = [
-            ("Venue", "Curzon Hall, Sydney"),
-            ("Date", formal_date),
-            ("Time", "7:00 PM – 11:30 PM"),
-        ]
-        
-        for label, value in details:
-            self.create_detail_row(card_frame, label, value)
+        # Re-place header inside right
+        bar.destroy()
+        bar2 = tk.Frame(right, bg=HDR_BG, height=HEADER_H)
+        bar2.pack(fill="x")
+        bar2.pack_propagate(False)
+        try:
+            img2 = tk.PhotoImage(file=LOGO_PATH)
+            self._imgs.append(img2)
+            tk.Label(bar2, image=img2, bg=HDR_BG).pack(side="left", padx=(20, 0))
+        except tk.TclError:
+            pass
+        mid2 = tk.Frame(bar2, bg=HDR_BG)
+        mid2.pack(side="left", padx=24, expand=True, fill="both")
+        tk.Label(mid2, text="Attendee", bg=HDR_BG, fg=TEXT_LIGHT,
+                 font=FONT_H2, anchor="w").pack(anchor="w", pady=(28, 0))
+        icons2 = tk.Frame(bar2, bg=HDR_BG)
+        icons2.pack(side="right", padx=24)
+        tk.Label(icons2, text="🔔", bg=HDR_BG, fg=TEXT_LIGHT, font=("Segoe UI Emoji", 18)).pack(side="left", padx=6)
+        tk.Label(icons2, text="👤", bg=HDR_BG, fg=GOLD,       font=("Segoe UI Emoji", 22)).pack(side="left", padx=6)
 
-    def create_rsvp_section(self):
-        """Creates the primary call-to-action button workflow area."""
-        rsvp_frame = tk.Frame(self.container, bg=BG)
-        rsvp_frame.pack(fill="x", pady=PADDING_Y)
-        
-        self.rsvp_button = self.create_action_button(
-            parent=rsvp_frame, 
-            text="Accept Invitation", 
-            command=self.accept_invitation, 
-            is_primary=True
-        )
-        self.rsvp_button.pack(pady=PADDING_Y)
+        # Scrollable body
+        body_outer = tk.Frame(right, bg=BG)
+        body_outer.pack(fill="both", expand=True)
 
-    def create_feedback_section(self):
-        """Places a clean, non-obtrusive post-event interaction area at the bottom."""
-        feedback_frame = tk.Frame(self.container, bg=BG)
-        feedback_frame.pack(fill="x", pady=(PADDING_Y * 2, 0))
-        
-        tk.Label(
-            feedback_frame, 
-            text="After the formal has concluded, we would love to hear your feedback.", 
-            font=SMALL, 
-            bg=BG, 
-            fg=SECONDARY
-        ).pack(pady=(0, PADDING_Y))
-        
-        self.create_action_button(
-            parent=feedback_frame, 
-            text="Leave Feedback", 
-            command=self.open_feedback_page, 
-            is_primary=True
-        ).pack()
+        # Central card
+        card = tk.Frame(body_outer, bg=CARD)
+        card.place(relx=0.04, rely=0.04, relwidth=0.92, relheight=0.92)
 
-    # -------------------------------------------------------------------------
-    # Reusable Component Utilities (DRY Compliance)
-    # -------------------------------------------------------------------------
+        # Card content — centred column
+        col = tk.Frame(card, bg=CARD)
+        col.place(relx=0.5, rely=0.5, anchor="center")
 
-    def create_detail_row(self, parent, label_text, value_text):
-        """Generates structured detail pairs perfectly balanced with layout grid weights."""
-        row = tk.Frame(parent, bg=CARD)
-        row.pack(fill="x", pady=PADDING_Y // 3)
-        
-        row.grid_columnconfigure(0, weight=1)
-        row.grid_columnconfigure(1, weight=2)
-        
-        tk.Label(
-            row, 
-            text=label_text.upper(), 
-            font=FONT_BOLD, 
-            bg=CARD, 
-            fg=SECONDARY,
-            anchor="e"
-        ).grid(row=0, column=0, sticky="e", padx=(0, PADDING_X))
-        
-        tk.Label(
-            row, 
-            text=value_text, 
-            font=FONT, 
-            bg=CARD,
-            fg=PRIMARY,
-            anchor="w"
-        ).grid(row=0, column=1, sticky="w")
+        school_name = formal.get("school") or "Your School"
+        formal_name = formal.get("formal_name") or "Formal Name"
 
-    def create_section_title(self, parent, text):
-        """Draws standard elegant headers for content structures."""
-        tk.Label(
-            parent, 
-            text=text, 
-            font=FONT_BOLD, 
-            bg=CARD,
-            fg=PRIMARY
-        ).pack(pady=(0, PADDING_Y))
+        conn = sqlite3.connect("database/formaly.db")
+        cur  = conn.cursor()
+        cur.execute("SELECT COUNT(*) FROM attendees")
+        attending = cur.fetchone()[0]
+        conn.close()
 
-    def create_divider(self, parent):
-        """Generates fine horizontal geometric design rules."""
-        divider = tk.Frame(parent, bg=BORDER, height=1)
-        divider.pack(fill="x", padx=PADDING_X * 2, pady=PADDING_Y)
+        tk.Label(col, text=f"{school_name} Invites you to", bg=CARD, fg=TEXT_LIGHT,
+                 font=FONT_BODY).pack()
+        tk.Label(col, text=formal_name, bg=CARD, fg=GOLD,
+                 font=("Segoe UI", 22, "bold")).pack(pady=(4, 8))
+        tk.Label(col, text=f"{attending} people attending", bg=CARD, fg=TEXT_MUTED,
+                 font=FONT_SMALL).pack()
+        tk.Label(col, text="Date: YYYY/MM/DD", bg=CARD, fg=TEXT_MUTED,
+                 font=FONT_SMALL).pack(pady=2)
+        tk.Label(col, text="Time: HH:MM", bg=CARD, fg=TEXT_MUTED,
+                 font=FONT_SMALL).pack(pady=(2, 14))
 
-    def create_action_button(self, parent, text, command, is_primary=True):
-        """Factory configuration for building standard application actions."""
-        bg_color = PRIMARY if is_primary else SECONDARY
-        fg_color = BG if is_primary else PRIMARY
-        font_style = FONT_BOLD if is_primary else FONT
-        
-        btn = tk.Button(
-            parent, 
-            text=text, 
-            command=command, 
-            bg=bg_color, 
-            fg=fg_color,
-            font=font_style, 
-            relief="flat",
-            bd=0,
-            padx=PADDING_X * 1.5 if is_primary else PADDING_X,
-            pady=PADDING_Y,
-            cursor="hand2",
-            activebackground=PRIMARY if is_primary else SECONDARY,
-            activeforeground=fg_color
-        )
-        return btn
+        # Name entry
+        self._name_ent = tk.Entry(col, bg=_FIELD_BG, fg=TEXT_MUTED,
+                                  font=FONT_BODY, relief="flat",
+                                  insertbackground=TEXT_LIGHT, width=46)
+        self._name_ent.pack(ipady=10)
+        self._name_ent.insert(0, "Enter Attendee's Name")
+        self._name_ent.bind("<FocusIn>",  self._name_in)
+        self._name_ent.bind("<FocusOut>", self._name_out)
 
-    # -------------------------------------------------------------------------
-    # Behavioral Event Interactivity Logic
-    # -------------------------------------------------------------------------
+        # Add Plus One toggle
+        self._plus_btn = tk.Button(col, text="Add Plus One",
+                                   bg=GOLD, fg=TEXT_LIGHT, font=FONT_BOLD,
+                                   relief="flat", cursor="hand2", width=24,
+                                   activebackground=GOLD_HOV,
+                                   command=self._toggle_plus)
+        self._plus_btn.pack(pady=(12, 0), ipady=8)
+        self._plus_btn.bind("<Enter>", lambda e: self._plus_btn.config(bg=GOLD_HOV))
+        self._plus_btn.bind("<Leave>", lambda e: self._plus_btn.config(bg=GOLD))
 
-    def accept_invitation(self):
-        """Executes invitation updates cleanly while adhering to system helpers."""
-        self.rsvp_button.configure(
-            text="✓ Attendance Confirmed",
-            bg=SUCCESS,
-            fg=BG,
-            cursor="arrow"
-        )
-        # Leverage built-in architecture method to transition control states safely
-        disable_widget(self.rsvp_button)
-# Link this button to the feedback page
-    def open_feedback_page(self):
-        """Triggers targeted view context router navigation callbacks."""
-        if self.controller and hasattr(self.controller, 'show_frame'):
-            self.controller.show_frame("FormalFeedbackPage")
+        # Plus-one name (hidden until toggled)
+        self._plus_frame = tk.Frame(col, bg=CARD)
+        self._plus_ent = tk.Entry(self._plus_frame, bg=_FIELD_BG, fg=TEXT_MUTED,
+                                  font=FONT_BODY, relief="flat",
+                                  insertbackground=TEXT_LIGHT, width=46)
+        self._plus_ent.pack(ipady=10)
+        self._plus_ent.insert(0, "Enter Name")
+
+        # Submit
+        sub_btn = tk.Button(col, text="SUBMIT", bg=GOLD, fg=TEXT_LIGHT,
+                            font=FONT_BOLD, relief="flat", cursor="hand2",
+                            width=46, activebackground=GOLD_HOV,
+                            command=self._submit)
+        sub_btn.pack(pady=(10, 0), ipady=10)
+        sub_btn.bind("<Enter>", lambda e: sub_btn.config(bg=GOLD_HOV))
+        sub_btn.bind("<Leave>", lambda e: sub_btn.config(bg=GOLD))
+
+        # Feedback link
+        tk.Label(col, text="Once the event is finished", bg=CARD, fg=TEXT_MUTED,
+                 font=FONT_SMALL).pack(pady=(16, 4))
+        fb_btn = tk.Button(col, text="FEEDBACK", bg=GOLD, fg=TEXT_LIGHT,
+                           font=FONT_BOLD, relief="flat", cursor="hand2",
+                           width=18, activebackground=GOLD_HOV,
+                           command=lambda: navigate(self, self.parent, "feedback", self.user))
+        fb_btn.pack(ipady=8)
+        fb_btn.bind("<Enter>", lambda e: fb_btn.config(bg=GOLD_HOV))
+        fb_btn.bind("<Leave>", lambda e: fb_btn.config(bg=GOLD))
+
+    def _name_in(self, e):
+        if self._name_ent.get() == "Enter Attendee's Name":
+            self._name_ent.delete(0, "end")
+            self._name_ent.config(fg=TEXT_LIGHT)
+
+    def _name_out(self, e):
+        if not self._name_ent.get().strip():
+            self._name_ent.insert(0, "Enter Attendee's Name")
+            self._name_ent.config(fg=TEXT_MUTED)
+
+    def _toggle_plus(self):
+        self._plus_visible = not self._plus_visible
+        if self._plus_visible:
+            self._plus_frame.pack(pady=(8, 0))
+            self._plus_btn.config(text="Remove Plus One")
+        else:
+            self._plus_frame.pack_forget()
+            self._plus_btn.config(text="Add Plus One")
+
+    def _submit(self):
+        name = self._name_ent.get().strip()
+        if not name or name == "Enter Attendee's Name":
+            messagebox.showwarning("Missing", "Please enter the attendee's name.")
+            return
+        try:
+            conn = sqlite3.connect("database/formaly.db")
+            cur  = conn.cursor()
+            cur.execute("INSERT OR IGNORE INTO attendees (name, plus_one, paid, attendance) VALUES (?, ?, 0, 0)",
+                        (name, 1 if self._plus_visible else 0))
+            conn.commit()
+            conn.close()
+            messagebox.showinfo("Submitted", f"Attendance recorded for {name}.")
+        except Exception as ex:
+            messagebox.showerror("Error", str(ex))

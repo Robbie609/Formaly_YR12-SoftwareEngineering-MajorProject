@@ -1,166 +1,74 @@
 import tkinter as tk
-import sys
-import os
-
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-
-from database.formaly_database_manager import get_attendance_stats
+from database.formaly_database_manager import *
 from utils.styles import *
-from pages.support.attendance_page import AttendancePage
+from utils.widgets import *
+
+_NAV     = ["Dashboard", "Attendance"]
+_NAV_MAP = {"Dashboard": "support", "Attendance": "attendance"}
+
 
 class SupportDashboard(tk.Frame):
     def __init__(self, parent, controller=None, user=None):
         super().__init__(parent, bg=BG)
-        self.controller = controller
-        self.user = user
-        self.setup_ui()
+        self.parent = parent
+        self.user   = user
+        self._imgs  = []
+        self._build()
 
-    def setup_ui(self):
-        root = tk.Frame(self, bg=BG)
-        root.pack(fill="both", expand=True)
+    def _build(self):
+        username = self.user["Username"] if self.user else "Support"
+        att      = get_attendance_stats()
+        formal   = get_formal_data()
 
-        # =========================
-        # SIDEBAR NAVIGATION
-        # =========================
-        sidebar = tk.Frame(root, bg=CARD, width=240)
-        sidebar.pack(side="left", fill="y")
-        sidebar.pack_propagate(False)
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(1, weight=1)
 
-        # Logo & Branding
-        tk.Label(
-            sidebar,
-            text="FORMALY",
-            bg=CARD,
-            fg=PRIMARY,
-            font=TITLE
-        ).pack(anchor="w", padx=20, pady=(30, 5))
+        build_sidebar(self, _NAV, "Dashboard",
+                      lambda t: navigate(self, self.parent, _NAV_MAP.get(t, t), self.user),
+                      self._imgs)
 
-        tk.Label(
-            sidebar,
-            text="Support",
-            bg=CARD,
-            fg=SECONDARY,
-            font=SMALL
-        ).pack(anchor="w", padx=20, pady=(0, 30))
+        right = tk.Frame(self, bg=BG)
+        right.grid(row=0, column=1, sticky="nsew")
+        right.rowconfigure(1, weight=1)
+        right.columnconfigure(0, weight=1)
 
-        # Navigation Buttons
-        self.nav_button(sidebar, "📊 Dashboard", lambda: self.controller.show_frame(SupportDashboard) if self.controller else None)
-        self.nav_button(sidebar, "👥 Attendance", lambda: self.controller.show_frame(AttendancePage) if self.controller else None)
+        build_header(right, f"Welcome, {username}", "Support Dashboard", self._imgs)
 
-        # Spacer
-        tk.Frame(sidebar, bg=BORDER, height=1).pack(fill="x", padx=15, pady=20)
+        body = tk.Frame(right, bg=BG)
+        body.pack(fill="both", expand=True, padx=22, pady=18)
+        body.columnconfigure((0, 1, 2), weight=1)
+        body.rowconfigure(1, weight=1)
 
-        # Logout
-        self.nav_button(sidebar, "Logout", self.logout, danger=True)
+        # Stat cards
+        stats_row = tk.Frame(body, bg=BG)
+        stats_row.grid(row=0, column=0, columnspan=3, sticky="ew", pady=(0, 14))
+        stats_row.columnconfigure((0, 1, 2), weight=1)
 
-        # =========================
-        # MAIN CONTENT AREA
-        # =========================
-        main = tk.Frame(root, bg=BG)
-        main.pack(side="left", fill="both", expand=True)
+        total    = att.get("total",    0)
+        present  = att.get("present",  0)
+        incoming = total - present
 
-        # Header Section
-        header = tk.Frame(main, bg=BG)
-        header.pack(fill="x", padx=40, pady=(35, 10))
+        stat_card(stats_row, "Total Attendees",   total,    0, 3)
+        stat_card(stats_row, "Currently Present", present,  1, 3)
+        stat_card(stats_row, "Incoming Attendees", incoming, 2, 3)
 
-        tk.Label(
-            header,
-            text="Dashboard Overview",
-            bg=BG,
-            fg="white",
-            font=TITLE
-        ).pack(anchor="w")
+        # Event details card
+        ev_card = tk.Frame(body, bg=CARD)
+        ev_card.grid(row=1, column=0, columnspan=3, sticky="nsew")
 
-        # KPI Cards Container
-        cards_frame = tk.Frame(main, bg=BG)
-        cards_frame.pack(fill="both", expand=True, padx=40, pady=(30, 40))
+        tk.Label(ev_card, text="EVENT DETAILS:", bg=CARD, fg=TEXT_LIGHT,
+                 font=FONT_BOLD, anchor="w").pack(fill="x", padx=18, pady=(16, 10))
 
-        self.stat_vars = {
-            "total": tk.StringVar(value="0"),
-            "present": tk.StringVar(value="0"),
-            "plus_ones": tk.StringVar(value="0"),
-        }
-
-        # Stats configuration: (label, key, color_accent)
-        stats = [
-            ("Total Attendees", "total", PRIMARY),
-            ("Currently Present", "present", SUCCESS),
-            ("Plus Ones", "plus_ones", PRIMARY),
+        rows = [
+            ("Formal Name",    formal.get("formal_name") or "—"),
+            ("School",         formal.get("school")       or "—"),
+            ("Budget",         f"${formal.get('budget', 0):,}"  if formal.get("budget") else "—"),
+            ("People Invited", str(formal.get("people_invited", 0))),
         ]
-
-        for i, (label, key, color) in enumerate(stats):
-            self.create_stat_card(cards_frame, label, key, color, i)
-
-    def create_stat_card(self, parent, label, key, color, index):
-        """Create a styled stat card."""
-        card = tk.Frame(
-            parent,
-            bg=CARD,
-            highlightthickness=1,
-            highlightbackground=BORDER
-        )
-        card.grid(row=0, column=index, padx=15, sticky="nsew", ipady=25, ipadx=30)
-        parent.grid_columnconfigure(index, weight=1)
-
-        tk.Label(
-            card,
-            text=label,
-            bg=CARD,
-            fg=SECONDARY,
-            font=FONT
-        ).pack(anchor="w")
-
-        tk.Label(
-            card,
-            textvariable=self.stat_vars[key],
-            bg=CARD,
-            fg=color,
-            font=("Segoe UI", 28, "bold")
-        ).pack(anchor="w", pady=(12, 0))
-
-    def nav_button(self, parent, text, command=None, danger=False):
-        """Create a navigation button."""
-        def on_enter(e):
-            btn.config(bg=PRIMARY if not danger else ERROR, fg="black" if not danger else "white")
-
-        def on_leave(e):
-            btn.config(bg=ENTRY, fg="white")
-
-        btn = tk.Button(
-            parent,
-            text=text,
-            command=command,
-            bg=ENTRY,
-            fg="white",
-            font=FONT,
-            relief="flat",
-            anchor="w",
-            padx=15,
-            pady=12,
-            cursor="hand2",
-            activebackground=PRIMARY
-        )
-        btn.pack(fill="x", padx=12, pady=5)
-        btn.bind("<Enter>", on_enter)
-        btn.bind("<Leave>", on_leave)
-
-        return btn
-
-    def tkraise(self, *args, **kwargs):
-        super().tkraise(*args, **kwargs)
-        self.refresh_data()
-
-    def refresh_data(self):
-        """Refresh dashboard statistics."""
-        try:
-            stats = get_attendance_stats()
-            self.stat_vars["total"].set(str(stats.get("total", 0)))
-            self.stat_vars["present"].set(str(stats.get("present", 0)))
-            self.stat_vars["plus_ones"].set(str(stats.get("plus_ones", 0)))
-        except Exception as e:
-            print("Error refreshing dashboard:", e)
-
-    def logout(self):
-        """Logout and return to login."""
-        if self.controller and hasattr(self.controller, 'logout'):
-            self.controller.logout()
+        for lbl, val in rows:
+            row = tk.Frame(ev_card, bg=CARD)
+            row.pack(fill="x", padx=18, pady=4)
+            tk.Label(row, text=lbl + ":", bg=CARD, fg=TEXT_MUTED,
+                     font=FONT_BODY, width=16, anchor="w").pack(side="left")
+            tk.Label(row, text=val, bg=CARD, fg=TEXT_LIGHT,
+                     font=FONT_BODY, anchor="w").pack(side="left")
