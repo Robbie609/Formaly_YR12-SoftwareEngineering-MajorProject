@@ -1,5 +1,3 @@
-# pages/planner/task_page.py
-
 import tkinter as tk
 from tkinter import ttk, messagebox
 import sqlite3
@@ -9,16 +7,13 @@ from utils.styles import (
     FONT, FONT_BOLD, TITLE, SUBTITLE, SMALL, PADDING_X, PADDING_Y
 )
 from utils.helpers import *
-
-_NAV     = ["Dashboard", "Tasks", "Venues", "Attendance", "Reports"]
-_NAV_MAP = {"Dashboard": "admin", "Tasks": "tasks", "Venues": "venues",
-            "Attendance": "attendance", "Reports": "reports"}
-
+from utils.validators import *
 class TaskPage(tk.Frame):
-    def __init__(self, parent, user=None):
+    def __init__(self, parent, user=None, origin=None):
         super().__init__(parent, bg=BG)
         self.parent = parent
         self.user = user
+        self.origin = origin or "planner"
 
         self.search_query = ""
         self.filter_priority = "All"
@@ -39,7 +34,7 @@ class TaskPage(tk.Frame):
 
         self.render_task_workspace()
     def _back(self):
-        navigate(self, self.parent, "planner", self.user)
+        navigate(self, self.parent, self.origin, self.user)
 
     def render_task_workspace(self):
         clear_frame(self.main_content)

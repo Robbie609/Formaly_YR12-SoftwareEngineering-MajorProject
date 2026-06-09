@@ -8,12 +8,13 @@ _NAV_MAP = {"Dashboard": "support", "Attendance": "attendance"}
 
 
 class SupportDashboard(tk.Frame):
-    def __init__(self, parent, controller=None, user=None):
+    def __init__(self, parent, controller=None, user=None, origin = None):
         super().__init__(parent, bg=BG)
         self.parent = parent
         self.user   = user
         self._imgs  = []
         self._build()
+        self.origin = "support"
 
     def _build(self):
         username = self.user["Username"] if self.user else "Support"

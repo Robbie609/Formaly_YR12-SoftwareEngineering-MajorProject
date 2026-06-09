@@ -11,15 +11,16 @@ from utils.helpers import truncate_text, clear_frame
 
 
 class VenueSuggestionPage(tk.Frame):
-    def __init__(self, parent, controller=None, user=None):
+    def __init__(self, parent, controller=None, user=None, origin=None):
         super().__init__(parent, bg=BG)
         self.parent = parent
         self.user   = user
         self._imgs  = []
         self._build()
+        self.origin = origin or "planner"
 
     def _back(self):
-        navigate(self, self.parent, "planner", self.user)
+        navigate(self, self.parent, self.origin, self.user)
 
     def _build(self):
 

@@ -188,7 +188,10 @@ def modal_field(parent, label, initial="", show=None, height=None):
 
 
 def navigate(current_frame, parent, target, user=None):
+    origin = getattr(current_frame, "origin", None)
+
     current_frame.destroy()
+
     if target == "logout":
         for child in parent.winfo_children():
             child.destroy()
@@ -197,6 +200,7 @@ def navigate(current_frame, parent, target, user=None):
         elif hasattr(parent, "build_ui"):
             parent.build_ui()
         return
+
     page_map = {
         "tasks":      ("pages.planner.task_page",        "TaskPage",            {"user": user}),
         "venues":     ("pages.planner.venue_page",        "VenueSuggestionPage", {"user": user}),
@@ -208,12 +212,17 @@ def navigate(current_frame, parent, target, user=None):
         "invitation": ("pages.attendee.attendee_dashboard","FormalInvitationPage",{"user": user}),
         "feedback":   ("pages.attendee.feedback_page",    "FormalFeedbackPage",  {"user": user}),
     }
+
     if target not in page_map:
         return
+
     module_path, class_name, kwargs = page_map[target]
+
     import importlib
     mod = importlib.import_module(module_path)
     cls = getattr(mod, class_name)
-    page = cls(parent, **kwargs)
+
+    # Pass ORIGIN correctly
+    page = cls(parent, origin=origin or target, **kwargs)
     page.place(relwidth=1, relheight=1)
     page.lift()

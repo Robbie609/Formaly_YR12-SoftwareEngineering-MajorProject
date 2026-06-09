@@ -10,16 +10,17 @@ from utils.widgets import build_subpage_header, navigate
 
 
 class AttendancePage(tk.Frame):
-    def __init__(self, parent, controller=None, user=None):
+    def __init__(self, parent, controller=None, user=None, origin=None):
         super().__init__(parent, bg=BG)
         self.parent   = parent
         self.user     = user
         self._imgs    = []
         self._selected = None
         self._build()
+        self.origin = origin or "support"
 
     def _back(self):
-        navigate(self, self.parent, "support", self.user)
+        navigate(self, self.parent, self.origin, self.user)
 
     def _build(self):
 
