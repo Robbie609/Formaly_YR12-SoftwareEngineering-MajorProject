@@ -21,6 +21,7 @@ _NAV_MAP = {"Dashboard": "admin", "Tasks": "tasks", "Venues": "venues",
 class AdminDashboard(tk.Frame):
     def __init__(self, parent, controller=None, user=None, origin=None):
         super().__init__(parent, bg=BG)
+        self.title("Formaly ~ Admin")
         self.parent = parent
         self.user   = user
         self._imgs  = []

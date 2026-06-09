@@ -27,17 +27,12 @@ class FormalInvitationPage(tk.Frame):
 
     def _build(self):
         formal = get_formal_data()
-
-        build_sidebar(self, _NAV, "Invitation",
-                      lambda t: navigate(self, self.parent, _NAV_MAP.get(t, t), self.user),
-                      self._imgs)
-
         bar = tk.Frame(self, bg=HDR_BG, height=HEADER_H)
         bar.pack(side="top", fill="x")
         bar.pack_propagate(False)
         mid = tk.Frame(bar, bg=HDR_BG)
         mid.pack(side="left", padx=24, expand=True, fill="both")
-        tk.Label(mid, text="Attendee", bg=HDR_BG, fg=TEXT_LIGHT,
+        tk.Label(mid, text="Attendee Invitation", bg=HDR_BG, fg=TEXT_LIGHT,
                  font=FONT_H2, anchor="w").pack(anchor="w", pady=(28, 0))
         icons = tk.Frame(bar, bg=HDR_BG)
         icons.pack(side="right", padx=24)
@@ -53,12 +48,6 @@ class FormalInvitationPage(tk.Frame):
         bar2 = tk.Frame(right, bg=HDR_BG, height=HEADER_H)
         bar2.pack(fill="x")
         bar2.pack_propagate(False)
-        try:
-            img2 = tk.PhotoImage(file=LOGO_PATH)
-            self._imgs.append(img2)
-            tk.Label(bar2, image=img2, bg=HDR_BG).pack(side="left", padx=(20, 0))
-        except tk.TclError:
-            pass
         mid2 = tk.Frame(bar2, bg=HDR_BG)
         mid2.pack(side="left", padx=24, expand=True, fill="both")
         tk.Label(mid2, text="Attendee", bg=HDR_BG, fg=TEXT_LIGHT,

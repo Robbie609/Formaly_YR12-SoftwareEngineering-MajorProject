@@ -13,6 +13,7 @@ from utils.helpers import truncate_text, clear_frame
 class VenueSuggestionPage(tk.Frame):
     def __init__(self, parent, controller=None, user=None, origin=None):
         super().__init__(parent, bg=BG)
+        self.title("Formaly ~ Venue")
         self.parent = parent
         self.user   = user
         self._imgs  = []
@@ -75,7 +76,6 @@ class VenueSuggestionPage(tk.Frame):
 
             # Calendar icon placeholder
             tk.Label(card, text="📅", bg=CARD, font=("Segoe UI Emoji", 28)).pack(anchor="w", padx=16, pady=(0, 8))
-            print("Calendar function where they can see the dates that other events are running is not implemented yet.")
 
             # Actions
             act = tk.Frame(card, bg=CARD)

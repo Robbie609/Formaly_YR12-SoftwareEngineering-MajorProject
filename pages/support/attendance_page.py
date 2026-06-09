@@ -12,6 +12,7 @@ from utils.widgets import build_subpage_header, navigate
 class AttendancePage(tk.Frame):
     def __init__(self, parent, controller=None, user=None, origin=None):
         super().__init__(parent, bg=BG)
+        self.title("Formaly ~ Attendance")
         self.parent   = parent
         self.user     = user
         self._imgs    = []
