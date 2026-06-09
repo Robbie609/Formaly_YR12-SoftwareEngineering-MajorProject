@@ -16,34 +16,25 @@ _FIELD_BG = "#3A3A3A"   # light-grey field bg from mockup
 
 
 class FormalInvitationPage(tk.Frame):
-    def __init__(self, parent, controller=None, user=None):
+    def __init__(self, parent, controller=None, user=None, origin=None):
         super().__init__(parent, bg=BG)
         self.parent = parent
         self.user   = user
         self._imgs  = []
         self._plus_visible = False
         self._build()
+        self.origin = origin or "admin"
 
     def _build(self):
         formal = get_formal_data()
-
-        self.grid_rowconfigure(0, weight=1)
-        self.grid_columnconfigure(1, weight=1)
 
         build_sidebar(self, _NAV, "Invitation",
                       lambda t: navigate(self, self.parent, _NAV_MAP.get(t, t), self.user),
                       self._imgs)
 
-        # Header — title "Attendee" in white (mockup shows white, not gold)
         bar = tk.Frame(self, bg=HDR_BG, height=HEADER_H)
-        bar.grid(row=0, column=1, sticky="new")
-        bar.grid_propagate(False)
-        try:
-            img = tk.PhotoImage(file=LOGO_PATH)
-            self._imgs.append(img)
-            tk.Label(bar, image=img, bg=HDR_BG).pack(side="left", padx=(20, 0))
-        except tk.TclError:
-            pass
+        bar.pack(side="top", fill="x")
+        bar.pack_propagate(False)
         mid = tk.Frame(bar, bg=HDR_BG)
         mid.pack(side="left", padx=24, expand=True, fill="both")
         tk.Label(mid, text="Attendee", bg=HDR_BG, fg=TEXT_LIGHT,
@@ -55,9 +46,7 @@ class FormalInvitationPage(tk.Frame):
 
         # Right content area
         right = tk.Frame(self, bg=BG)
-        right.grid(row=0, column=1, sticky="nsew")
-        right.rowconfigure(1, weight=1)
-        right.columnconfigure(0, weight=1)
+        right.pack(side="top", fill="both", expand=True)
 
         # Re-place header inside right
         bar.destroy()

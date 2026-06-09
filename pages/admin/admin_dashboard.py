@@ -10,13 +10,12 @@ from utils.styles import (
     FONT_BODY, FONT_BOLD, FONT_H2, FONT_H3, FONT_SMALL, FONT_STAT,
 )
 from utils.widgets import build_sidebar, build_header, stat_card, navigate, make_modal, modal_field
-import subprocess
-import sys
+from pages.attendee.attendee_dashboard import FormalInvitationPage
 
 
 _NAV     = ["Dashboard", "Tasks", "Venues", "Attendance", "Reports"]
 _NAV_MAP = {"Dashboard": "admin", "Tasks": "tasks", "Venues": "venues",
-            "Attendance": "attendance", "Reports": "reports"}
+            "Attendance": "attendance", "Reports": "reports", "Attendee" : "attendee"}
 
 
 class AdminDashboard(tk.Frame):
@@ -74,14 +73,14 @@ class AdminDashboard(tk.Frame):
                             bg=GOLD, fg=TEXT_LIGHT, font=FONT_BOLD,
                             relief="flat", cursor="hand2",
                             activebackground=GOLD_HOV, activeforeground=TEXT_LIGHT,
-                            command=lambda: messagebox.showinfo("Invitation", "Invitation submitted!"))
+                            command=lambda: navigate(self, self.parent, "invitation", self.user))
         sub_btn.pack(anchor="w", padx=18, pady=14)
         sub_btn.bind("<Enter>", lambda e: sub_btn.config(bg=GOLD_HOV))
         sub_btn.bind("<Leave>", lambda e: sub_btn.config(bg=GOLD))
 
         # Budget card
         bud_card = tk.Frame(body, bg=CARD)
-        bud_card.pack(side="right", fill="y")
+        bud_card.pack(side="right", fill="both", expand=True)
 
         tk.Label(bud_card, text="Budget", bg=CARD, fg=TEXT_LIGHT,
                  font=FONT_BOLD, anchor="w").pack(fill="x", padx=18, pady=(16, 6))

@@ -12,12 +12,13 @@ _NAV_MAP = {"Dashboard": "admin", "Tasks": "tasks", "Venues": "venues",
 
 
 class ReportsPage(tk.Frame):
-    def __init__(self, parent, controller=None, user=None):
+    def __init__(self, parent, controller=None, user=None, origin=None):
         super().__init__(parent, bg=BG)
         self.parent = parent
         self.user   = user
         self._imgs  = []
         self._build()
+        self.origin = origin or "admin"
 
     def _build(self):
         formal = get_formal_data()

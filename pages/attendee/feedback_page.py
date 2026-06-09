@@ -15,41 +15,31 @@ _FIELD_BG = "#E8E8E8"   # light grey text area (matches mockup)
 
 
 class FormalFeedbackPage(tk.Frame):
-    def __init__(self, parent, controller=None, user=None):
+    def __init__(self, parent, controller=None, user=None, origin=None):
         super().__init__(parent, bg=BG)
         self.parent    = parent
         self.user      = user
         self._imgs     = []
         self._rating   = 0
         self._star_btns = []
+        self.origin = origin or "invitation"
         self._build()
 
     def _build(self):
         formal = get_formal_data()
         formal_name = formal.get("formal_name") or "Formal Name"
 
-        self.grid_rowconfigure(0, weight=1)
-        self.grid_columnconfigure(1, weight=1)
-
         build_sidebar(self, _NAV, "Feedback",
                       lambda t: navigate(self, self.parent, _NAV_MAP.get(t, t), self.user),
                       self._imgs)
 
         right = tk.Frame(self, bg=BG)
-        right.grid(row=0, column=1, sticky="nsew")
-        right.rowconfigure(1, weight=1)
-        right.columnconfigure(0, weight=1)
+        right.pack(side="top", fill="both", expand=True)
 
         # Header — "Attendee Feedback" with white+gold split
         bar = tk.Frame(right, bg=HDR_BG, height=HEADER_H)
         bar.pack(fill="x")
         bar.pack_propagate(False)
-        try:
-            img = tk.PhotoImage(file=LOGO_PATH)
-            self._imgs.append(img)
-            tk.Label(bar, image=img, bg=HDR_BG).pack(side="left", padx=(20, 0))
-        except tk.TclError:
-            pass
         mid = tk.Frame(bar, bg=HDR_BG)
         mid.pack(side="left", padx=24, expand=True, fill="both")
         title_row = tk.Frame(mid, bg=HDR_BG)
