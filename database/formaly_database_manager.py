@@ -4,9 +4,20 @@
 # Imports
 import sqlite3
 import hashlib
+import os
+import sys
+import sqlite3
+
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS
+    except AttributeError:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 # This connects the database file to a variable for use in the functions below
-DB_PATH = "database/formaly.db"
+DB_PATH = resource_path("database/formaly.db")
 
 # This function creates a connection to the database and allows access by column name
 def _connect():
