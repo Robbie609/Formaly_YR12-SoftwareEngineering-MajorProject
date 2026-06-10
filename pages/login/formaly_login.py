@@ -30,6 +30,8 @@ class FormalyLoginApp(tk.Tk):
         super().__init__()
         self.title("Formaly")
         self.configure(bg=PANEL_BLACK)
+        self.logo_image = tk.PhotoImage(file=LOGO_PATH) # Loads the image
+        self.iconphoto(False, self.logo_image)         
         self.geometry("1200x700")
         self.minsize(960, 600)
         self.resizable(True, True)
