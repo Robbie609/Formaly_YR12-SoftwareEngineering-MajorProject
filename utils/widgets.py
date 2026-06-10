@@ -71,7 +71,7 @@ def build_header(parent, title, subtitle, imgs):
     bar.pack(fill="x")
     bar.pack_propagate(False)
     try:
-        img = tk.PhotoImage(file="")
+        img = tk.PhotoImage(file="assets/Logo.png")
         imgs.append(img)
         tk.Label(bar, image=img, bg=HDR_BG).pack(side="left", padx=(20, 0))
     except tk.TclError:

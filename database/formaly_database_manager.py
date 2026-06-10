@@ -6,7 +6,6 @@ import sqlite3
 import hashlib
 import os
 import sys
-import sqlite3
 
 def resource_path(relative_path):
     try:

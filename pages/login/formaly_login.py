@@ -73,7 +73,6 @@ class FormalyLoginApp(tk.Tk):
         logo_frame.rowconfigure(0, weight=1)
         try:
             self._logo = tk.PhotoImage(file=LOGO_PATH)
-            # I want to double the image's size
             tk.Label(logo_frame, image=self._logo, bg=PANEL_BLACK).pack(expand=True)
         except tk.TclError:
             tk.Label(logo_frame, text="🎩", bg=PANEL_BLACK, fg=GOLD,

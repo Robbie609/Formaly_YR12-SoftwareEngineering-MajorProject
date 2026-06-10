@@ -1,5 +1,4 @@
 from database.formaly_database_manager import init_db
-import tkinter as tk
 from pages.login.formaly_login import FormalyLoginApp
 
 def main():
