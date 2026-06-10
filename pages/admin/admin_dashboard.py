@@ -1,3 +1,4 @@
+# Imports
 import tkinter as tk
 from tkinter import messagebox
 from database.formaly_database_manager import (
@@ -12,13 +13,14 @@ from utils.styles import (
 from utils.widgets import build_sidebar, build_header, stat_card, navigate, make_modal, modal_field
 from pages.attendee.attendee_dashboard import FormalInvitationPage
 
-
+# Sidebar Navigation
 _NAV     = ["Dashboard", "Tasks", "Venues", "Attendance", "Reports"]
 _NAV_MAP = {"Dashboard": "admin", "Tasks": "tasks", "Venues": "venues",
             "Attendance": "attendance", "Reports": "reports", "Attendee" : "attendee"}
 
-
+# Class for the admin dashboard
 class AdminDashboard(tk.Frame):
+    # Initialising admin dashboard
     def __init__(self, parent, controller=None, user=None, origin=None):
         super().__init__(parent, bg=BG)
         self.parent = parent
@@ -26,13 +28,13 @@ class AdminDashboard(tk.Frame):
         self._imgs  = []
         self._build()
         self.origin = "admin"
-
+    # Builds main dashboard layout
     def _build(self):
         username = self.user["Username"] if self.user else "Admin"
         formal   = get_formal_data()
-
+        # Sidebar navigation
         build_sidebar(self,_NAV,"Dashboard",lambda t: navigate(self, self.parent, _NAV_MAP.get(t, t), self.user),self._imgs)
-
+        # Right content container
         right = tk.Frame(self, bg=BG)
         right.pack(side="right", fill="both", expand=True)
 
@@ -44,7 +46,7 @@ class AdminDashboard(tk.Frame):
         # Stat cards
         stats_row = tk.Frame(body, bg=BG)
         stats_row.pack(fill="x", pady=(0, 14))
-
+        # Load system data
         pending = get_pending_task_count()
         att     = get_attendance_stats()
         venues  = get_venue_count()
@@ -53,7 +55,7 @@ class AdminDashboard(tk.Frame):
         stat_card(stats_row, "Venue Selected",  venues,              1, 3)
         stat_card(stats_row, "Total Attendees", att.get("total", 0), 2, 3)
 
-        # Lower row: event details (left 2/3) + budget (right 1/3)
+        # Event details card (left panel)
         ev_card = tk.Frame(body, bg=CARD)
         ev_card.pack(side="left", fill="both", expand=True, padx=(0, 10))
 
@@ -68,7 +70,7 @@ class AdminDashboard(tk.Frame):
                          lambda: self._edit(fid, "formal_name", ev_name))
         tk.Frame(ev_card, bg=BORDER, height=1).pack(fill="x", padx=18)
         self._detail_row(ev_card, "Date:", "TBA", lambda: None)
-
+        # Navigation to attendee invitation
         sub_btn = tk.Button(ev_card, text="Submit Invitation",
                             bg=GOLD, fg=TEXT_LIGHT, font=FONT_BOLD,
                             relief="flat", cursor="hand2",
@@ -91,19 +93,19 @@ class AdminDashboard(tk.Frame):
 
         tk.Label(bud_card, text=f"${budget:,}", bg=CARD, fg=GOLD,
                  font=FONT_H3).pack(anchor="w", padx=18)
-
+        # Budget progress bar
         bar_bg = tk.Frame(bud_card, bg=BORDER, height=12)
         bar_bg.pack(fill="x", padx=18, pady=12)
 
         fill = tk.Frame(bar_bg, bg=GOLD, height=12)
         fill.place(relx=0, rely=0, relwidth=pct, relheight=1)
-
+        # Edit budget button
         edit_bud = tk.Button(bud_card, text="Edit", bg=ENTRY, fg=TEXT_LIGHT,
                              font=FONT_SMALL, relief="flat", cursor="hand2",
                              activebackground=BORDER,
                              command=lambda: self._edit(fid, "budget", budget))
         edit_bud.pack(anchor="w", padx=18, pady=(0, 14))
-
+    # Creates reusable editable detail row
     def _detail_row(self, parent, label, value, edit_cmd):
         row = tk.Frame(parent, bg=CARD)
         row.pack(fill="x", padx=18, pady=8)
@@ -115,7 +117,7 @@ class AdminDashboard(tk.Frame):
                         font=FONT_SMALL, relief="flat", cursor="hand2",
                         command=edit_cmd, activebackground=BORDER)
         btn.pack(side="right")
-
+    # Opens popup for editing formal data fields
     def _edit(self, fid, field, current):
         if not fid:
             messagebox.showinfo("Notice", "No formal data record found.")

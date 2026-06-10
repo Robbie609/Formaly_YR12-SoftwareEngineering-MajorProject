@@ -1,3 +1,4 @@
+# Imports
 import tkinter as tk
 from tkinter import messagebox
 import sqlite3
@@ -9,13 +10,11 @@ from utils.styles import (
 )
 from utils.widgets import build_sidebar, build_header, navigate, HEADER_H, HDR_BG, LOGO_PATH
 
-_NAV     = ["Invitation", "Feedback"]
-_NAV_MAP = {"Invitation": "invitation", "Feedback": "feedback"}
-
 _FIELD_BG = "#3A3A3A"   # light-grey field bg from mockup
 
 
 class FormalInvitationPage(tk.Frame):
+    # Initialising the invitation page
     def __init__(self, parent, controller=None, user=None, origin=None):
         super().__init__(parent, bg=BG)
         self.parent = parent
@@ -24,7 +23,7 @@ class FormalInvitationPage(tk.Frame):
         self._plus_visible = False
         self._build()
         self.origin = origin or "admin"
-
+    # Builds main UI layout
     def _build(self):
         formal = get_formal_data()
         bar = tk.Frame(self, bg=HDR_BG, height=HEADER_H)
@@ -43,7 +42,7 @@ class FormalInvitationPage(tk.Frame):
         right = tk.Frame(self, bg=BG)
         right.pack(side="top", fill="both", expand=True)
 
-        # Re-place header inside right
+        # Re place header inside right
         bar.destroy()
         bar2 = tk.Frame(right, bg=HDR_BG, height=HEADER_H)
         bar2.pack(fill="x")
@@ -65,19 +64,20 @@ class FormalInvitationPage(tk.Frame):
         card = tk.Frame(body_outer, bg=CARD)
         card.place(relx=0.04, rely=0.04, relwidth=0.92, relheight=0.92)
 
-        # Card content — centred column
+        # Card content
         col = tk.Frame(card, bg=CARD)
         col.place(relx=0.5, rely=0.5, anchor="center")
 
         school_name = formal.get("school") or "Your School"
         formal_name = formal.get("formal_name") or "Formal Name"
-
+        # Connects to the database
         conn = sqlite3.connect("database/formaly.db")
         cur  = conn.cursor()
         cur.execute("SELECT COUNT(*) FROM attendees")
         attending = cur.fetchone()[0]
         conn.close()
 
+        # Main event details
         tk.Label(col, text=f"{school_name} Invites you to", bg=CARD, fg=TEXT_LIGHT,
                  font=FONT_BODY).pack()
         tk.Label(col, text=formal_name, bg=CARD, fg=GOLD,
@@ -136,16 +136,17 @@ class FormalInvitationPage(tk.Frame):
         fb_btn.bind("<Enter>", lambda e: fb_btn.config(bg=GOLD_HOV))
         fb_btn.bind("<Leave>", lambda e: fb_btn.config(bg=GOLD))
 
+    # Enter Attendee's name focus in
     def _name_in(self, e):
         if self._name_ent.get() == "Enter Attendee's Name":
             self._name_ent.delete(0, "end")
             self._name_ent.config(fg=TEXT_LIGHT)
-
+    # Enter Attendee's name focus out
     def _name_out(self, e):
         if not self._name_ent.get().strip():
             self._name_ent.insert(0, "Enter Attendee's Name")
             self._name_ent.config(fg=TEXT_MUTED)
-
+    # Toggling the plus one 
     def _toggle_plus(self):
         self._plus_visible = not self._plus_visible
         if self._plus_visible:
@@ -154,9 +155,10 @@ class FormalInvitationPage(tk.Frame):
         else:
             self._plus_frame.pack_forget()
             self._plus_btn.config(text="Add Plus One")
-
+    # Submit the data to the database
     def _submit(self):
         name = self._name_ent.get().strip()
+        # Empty state validation
         if not name or name == "Enter Attendee's Name":
             messagebox.showwarning("Missing", "Please enter the attendee's name.")
             return

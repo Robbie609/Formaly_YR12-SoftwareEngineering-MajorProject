@@ -1,3 +1,4 @@
+# Imports
 import tkinter as tk
 from utils.styles import (
     BG, CARD, ENTRY, BORDER, GOLD, GOLD_HOV,
@@ -5,21 +6,25 @@ from utils.styles import (
     ERROR, SUCCESS, FONT_BODY, FONT_BOLD,
     FONT_H2, FONT_H3, FONT_SMALL, FONT_BRAND, FONT_STAT,
 )
-
+# Logo Variable
 LOGO_PATH = "assets/Logo.png"
+#Sidebar dimensions
 SIDEBAR_W = 200
 HEADER_H  = 130
+#Header background colors
 HDR_BG    = "#0B0B0B"
 
-
+# Creating the sidebar navigation menu
 def build_sidebar(parent, nav_items, active, on_navigate, imgs):
+    # Creating the sidebar container
     sb = tk.Frame(parent, bg=CARD, width=SIDEBAR_W)
     sb.pack(side="left", fill="y")
     sb.pack_propagate(False)
-
+    # Creating the logo section
     logo_frame = tk.Frame(sb, bg=CARD, height=HEADER_H)
     logo_frame.pack(fill="x")
     logo_frame.pack_propagate(False)
+    # Loading the application logo
     try:
         img = tk.PhotoImage(file=LOGO_PATH)
         imgs.append(img)
@@ -29,7 +34,7 @@ def build_sidebar(parent, nav_items, active, on_navigate, imgs):
                  font=FONT_BRAND).pack(expand=True)
 
     tk.Frame(sb, bg=GOLD, height=1).pack(fill="x")
-
+    #Creating the navigation buttons
     for label in nav_items:
         is_active = (label == active)
         row_bg = "#222222" if is_active else CARD
@@ -53,7 +58,7 @@ def build_sidebar(parent, nav_items, active, on_navigate, imgs):
 
     tk.Frame(sb, bg=CARD).pack(fill="both", expand=True)
     tk.Frame(sb, bg=BORDER, height=1).pack(fill="x")
-
+    # Creating the logout button
     lo_row = tk.Frame(sb, bg=CARD)
     lo_row.pack(fill="x")
     tk.Frame(lo_row, bg=ERROR, width=4).pack(side="left", fill="y")
@@ -65,7 +70,7 @@ def build_sidebar(parent, nav_items, active, on_navigate, imgs):
         w.bind("<Enter>",  lambda e, r=lo_row, l=lo_lbl: (r.config(bg="#2a0a0a"), l.config(bg="#2a0a0a")))
         w.bind("<Leave>",  lambda e, r=lo_row, l=lo_lbl: (r.config(bg=CARD),     l.config(bg=CARD)))
 
-
+#Creating the page header
 def build_header(parent, title, subtitle, imgs):
     bar = tk.Frame(parent, bg=HDR_BG, height=HEADER_H)
     bar.pack(fill="x")
@@ -85,7 +90,7 @@ def build_header(parent, title, subtitle, imgs):
     tk.Label(icons, text="🔔", bg=HDR_BG, fg=TEXT_LIGHT, font=("Segoe UI Emoji", 18)).pack(side="left", padx=6)
     tk.Label(icons, text="👤", bg=HDR_BG, fg=GOLD,       font=("Segoe UI Emoji", 22)).pack(side="left", padx=6)
 
-
+# Creating the subpage header with a back button
 def build_subpage_header(parent, title, on_back, imgs):
     bar = tk.Frame(parent, bg=HDR_BG, height=HEADER_H)
     bar.pack(fill="x")
@@ -106,7 +111,7 @@ def build_subpage_header(parent, title, on_back, imgs):
     tk.Label(icons, text="🔔", bg=HDR_BG, fg=TEXT_LIGHT, font=("Segoe UI Emoji", 18)).pack(side="left", padx=6)
     tk.Label(icons, text="👤", bg=HDR_BG, fg=GOLD,       font=("Segoe UI Emoji", 22)).pack(side="left", padx=6)
 
-
+# Creating a staistics card
 def stat_card(parent, label, value, col, total_cols, pad=10):
     card = tk.Frame(parent, bg=CARD)
 
@@ -138,7 +143,7 @@ def stat_card(parent, label, value, col, total_cols, pad=10):
 
     return card
 
-
+# Creating a scrollable window
 def scrollable_frame(parent, bg=None):
     bg = bg or BG
     outer = tk.Frame(parent, bg=bg)
@@ -155,7 +160,7 @@ def scrollable_frame(parent, bg=None):
     outer.pack(fill="both", expand=True)
     return inner
 
-
+# Creating a popup window
 def make_modal(parent, title_text, w=460, h=500):
     m = tk.Toplevel(parent)
     m.title(title_text)
@@ -167,7 +172,7 @@ def make_modal(parent, title_text, w=460, h=500):
     m.geometry(f"{w}x{h}+{(sw-w)//2}+{(sh-h)//2}")
     return m
 
-
+# Creating an input field inside the popup window
 def modal_field(parent, label, initial="", show=None, height=None):
     tk.Label(parent, text=label, bg=BG, fg=GOLD, font=FONT_BOLD, anchor="w").pack(fill="x", pady=(10, 2))
     border = tk.Frame(parent, bg=BORDER, padx=1, pady=1)
@@ -186,7 +191,7 @@ def modal_field(parent, label, initial="", show=None, height=None):
             w.insert(0, initial)
     return w
 
-
+# Navigating between pages
 def navigate(current_frame, parent, target, user=None):
     origin = getattr(current_frame, "origin", None)
 

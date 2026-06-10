@@ -1,3 +1,4 @@
+# Imports
 import tkinter as tk
 from database.formaly_database_manager import get_formal_data
 from utils.styles import (
@@ -6,12 +7,14 @@ from utils.styles import (
 )
 from utils.widgets import build_sidebar, build_header, navigate
 
+# Setting up the sidebar navigation
 _NAV     = ["Dashboard", "Tasks", "Venues", "Attendance", "Reports"]
 _NAV_MAP = {"Dashboard": "admin", "Tasks": "tasks", "Venues": "venues",
             "Attendance": "attendance", "Reports": "reports"}
 
-
+# Class for the reports page
 class ReportsPage(tk.Frame):
+    # Initialising reports page
     def __init__(self, parent, controller=None, user=None, origin=None):
         super().__init__(parent, bg=BG)
         self.parent = parent
@@ -19,18 +22,18 @@ class ReportsPage(tk.Frame):
         self._imgs  = []
         self._build()
         self.origin = origin or "admin"
-
+    # Builds main UI layout
     def _build(self):
         formal = get_formal_data()
-
+        # Sidebar navigation
         build_sidebar(self, _NAV, "Reports",
                       lambda t: navigate(self, self.parent, _NAV_MAP.get(t, t), self.user),
                       self._imgs)
-
+        # Right side container
         right = tk.Frame(self, bg=BG)
         right.pack(side="right", fill="both", expand=True)
 
-        # Header: "Formal Report" — "Formal" gold, "Report" white
+        # Header
         bar = tk.Frame(right, bg="#0B0B0B", height=130)
         bar.pack(fill="x")
         bar.pack_propagate(False)
@@ -46,7 +49,7 @@ class ReportsPage(tk.Frame):
         tk.Label(icons, text="🔔", bg=HDR_BG, fg=TEXT_LIGHT, font=("Segoe UI Emoji", 18)).pack(side="left", padx=6)
         tk.Label(icons, text="👤", bg=HDR_BG, fg=GOLD,       font=("Segoe UI Emoji", 22)).pack(side="left", padx=6)
 
-        # Main report card
+        # Main report section
         body = tk.Frame(right, bg=BG)
         body.pack(fill="both", expand=True, padx=22, pady=18)
 
@@ -57,7 +60,7 @@ class ReportsPage(tk.Frame):
         tk.Label(card, text=f"{formal_name} Report", bg=CARD, fg=GOLD,
                  font=FONT_H3, anchor="center").pack(fill="x", pady=(20, 6))
         tk.Frame(card, bg=BORDER, height=1).pack(fill="x", padx=24, pady=(0, 16))
-
+        # Report data rows
         rows = [
             ("People that were invited:",            formal.get("people_invited",  0)),
             ("People that attended:",                formal.get("people_attended", 0)),
@@ -76,7 +79,7 @@ class ReportsPage(tk.Frame):
                      font=FONT_STAT, anchor="e").pack(side="right")
 
         tk.Frame(card, bg=BORDER, height=1).pack(fill="x", padx=24, pady=(8, 6))
-
+        # Feedback section
         feedback_label = formal.get("feedback") or "No feedback recorded."
         tk.Label(card, text="Feedback from guests:", bg=CARD, fg=GOLD,
                  font=FONT_BOLD, anchor="w").pack(fill="x", padx=32, pady=(8, 4))
@@ -84,7 +87,7 @@ class ReportsPage(tk.Frame):
         fb_row = tk.Frame(card, bg=CARD)
         fb_row.pack(fill="x", padx=32, pady=(0, 20))
         fb_row.columnconfigure((0, 1), weight=1)
-
+        # Feedback display boxes
         fb1 = tk.Frame(fb_row, bg=ENTRY, height=80)
         fb1.pack(side="left", fill="x", expand=True, padx=(0, 8))
         tk.Label(fb1, text=str(feedback_label), bg=ENTRY, fg=TEXT_MUTED,

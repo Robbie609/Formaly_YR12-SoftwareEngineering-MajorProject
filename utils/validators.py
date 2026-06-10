@@ -1,5 +1,4 @@
 # Imports
-import re
 from datetime import datetime
 
 # This function checks if a value is empty (None, empty string, or only whitespace)

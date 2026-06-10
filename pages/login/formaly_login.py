@@ -167,7 +167,7 @@ class FormalyLoginApp(tk.Tk):
                                    font=FONT_SMALL, wraplength=440)
         self.status_lbl.pack(pady=(8, 0))
 
-    # This function creates the role selection buttons
+    # Creates the role selection buttons
     def _build_roles(self, parent):
         row = tk.Frame(parent, bg=CREAM)
         row.pack()
@@ -184,26 +184,26 @@ class FormalyLoginApp(tk.Tk):
             btn.pack(side="left", padx=5, ipady=11)
             self._role_btns[role] = btn
 
-    # This function manages the state of the role selection buttons, ensuring only one can be active at a time
+    # Manages the state of the role selection buttons, ensuring only one can be active at a time
     def _select_role(self, role):
         self.selected_role = role
         for r, btn in self._role_btns.items():
             btn.config(bg=GOLD_HOV if r == role else GOLD,
                        relief="sunken" if r == role else "flat")
 
-    # This function creates the confirm password field in the registration page
+    # Creates the confirm password field in the registration page
     def _spaced_label(self, parent, text):
         tk.Label(parent, text=text, bg=CREAM, fg=TEXT_MUTED,
                  font=_F_LABEL).pack(pady=(0, 5))
 
-    # This function toggles the visibility of the password field when the eye icon is clicked
+    # Toggles the visibility of the password field when the eye icon is clicked
     def _toggle_pw(self):
         if self._pw_ph.is_placeholder():
             return
         self._pw_visible = not self._pw_visible
         self._pw_widget.config(show="" if self._pw_visible else "●")
 
-    # This function manages the login process when the login button is clicked
+    # Manages the login process when the login button is clicked
     def _do_login(self):
         if not self.selected_role:
             self._show_status("Please select a role.", ERROR)
@@ -245,7 +245,7 @@ class FormalyLoginApp(tk.Tk):
         self._show_status("Login successful!", SUCCESS)
         self.after(500, lambda: self._open_dashboard(db_role))
 
-    # This function opens the dashboard corresponding to the user's role
+    # Opens the dashboard corresponding to the user's role
     def _open_dashboard(self, role):
         try:
             # Depending on the role, it imports and opens the corresponding dashboard page
@@ -271,7 +271,7 @@ class FormalyLoginApp(tk.Tk):
         except Exception as exc:
             self._show_status(f"Error opening dashboard: {exc}", ERROR)
 
-    # This function opens the registration page when the "Sign up" link is clicked
+    # Opens the registration page when the "Sign up" link is clicked
     def _open_register(self):
         try:
             from pages.login.formaly_register import FormalyRegisterApp
@@ -280,7 +280,7 @@ class FormalyLoginApp(tk.Tk):
         except Exception as exc:
             messagebox.showerror("Error", f"Could not open register: {exc}")
 
-    # This function updates the status label with a message and colour
+    # Updates the status label with a message and colour
     def _show_status(self, msg, colour):
         self.status_lbl.config(text=msg, fg=colour)
         if colour == SUCCESS:

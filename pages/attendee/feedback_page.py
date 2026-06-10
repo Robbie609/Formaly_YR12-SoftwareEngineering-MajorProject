@@ -1,3 +1,4 @@
+# Imports
 import tkinter as tk
 from tkinter import messagebox
 from database.formaly_database_manager import add_feedback, get_formal_data
@@ -8,12 +9,13 @@ from utils.styles import (
 )
 from utils.widgets import build_sidebar, navigate, HEADER_H, HDR_BG, LOGO_PATH
 
+# Navigation structure for sidebar
 _NAV     = ["Invitation", "Feedback"]
 _NAV_MAP = {"Invitation": "invitation", "Feedback": "feedback"}
 
 _FIELD_BG = "#E8E8E8"   # light grey text area (matches mockup)
 
-
+# Class for Formal Feedback page
 class FormalFeedbackPage(tk.Frame):
     def __init__(self, parent, controller=None, user=None, origin=None):
         super().__init__(parent, bg=BG)
@@ -24,19 +26,20 @@ class FormalFeedbackPage(tk.Frame):
         self._star_btns = []
         self.origin = origin or "invitation"
         self._build()
-
+    # Creates main layout structure
     def _build(self):
+        # Retrieves formal event data from database
         formal = get_formal_data()
         formal_name = formal.get("formal_name") or "Formal Name"
-
+        # Creates sidebar navigation
         build_sidebar(self, _NAV, "Feedback",
                       lambda t: navigate(self, self.parent, _NAV_MAP.get(t, t), self.user),
                       self._imgs)
-
+        # Main right side container
         right = tk.Frame(self, bg=BG)
         right.pack(side="top", fill="both", expand=True)
 
-        # Header — "Attendee Feedback" with white+gold split
+        # Header
         bar = tk.Frame(right, bg=HDR_BG, height=HEADER_H)
         bar.pack(fill="x")
         bar.pack_propagate(False)
@@ -69,6 +72,7 @@ class FormalFeedbackPage(tk.Frame):
 
         stars_frame = tk.Frame(star_row, bg=CARD)
         stars_frame.pack(side="left")
+        # Creates 5 star rating system
         for i in range(1, 6):
             btn = tk.Button(stars_frame, text="☆", bg=CARD, fg=GOLD,
                             font=("Segoe UI Emoji", 22), relief="flat", bd=0,
@@ -79,7 +83,7 @@ class FormalFeedbackPage(tk.Frame):
 
         tk.Frame(card, bg=BORDER, height=1).pack(fill="x", padx=24, pady=(10, 14))
 
-        # Improvements text area — light grey as in mockup
+        # Improvements text area 
         txt_frame = tk.Frame(card, bg=_FIELD_BG)
         txt_frame.pack(fill="both", expand=True, padx=24, pady=(0, 16))
 
@@ -87,6 +91,8 @@ class FormalFeedbackPage(tk.Frame):
                             font=FONT_BODY, relief="flat", bd=0,
                             wrap="word", insertbackground="#333")
         self._txt.pack(fill="both", expand=True, padx=12, pady=10)
+
+        # Placeholder text handling
         _ph = "What would you improve?"
         self._txt.insert("1.0", _ph)
 
@@ -109,20 +115,22 @@ class FormalFeedbackPage(tk.Frame):
         sub.pack(pady=(0, 20), ipady=8)
         sub.bind("<Enter>", lambda e: sub.config(bg=GOLD_HOV))
         sub.bind("<Leave>", lambda e: sub.config(bg=GOLD))
-
+    # Updates star rating selection
     def _set_rating(self, value):
         self._rating = value
         for i, btn in enumerate(self._star_btns):
             btn.config(text="★" if i < value else "☆")
-
+    # Submits feedback to database
     def _submit(self):
         _ph = "What would you improve?"
         improvements = self._txt.get("1.0", "end-1c").strip()
         if improvements == _ph:
             improvements = ""
+        # Validation
         if self._rating == 0 and not improvements:
             messagebox.showwarning("Required", "Please provide a rating or write your feedback.")
             return
+        # Saves feedback to database
         try:
             add_feedback(str(self._rating), improvements)
             messagebox.showinfo("Thank You", "Your feedback has been submitted.")

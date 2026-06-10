@@ -1,3 +1,4 @@
+# Imports
 import tkinter as tk
 from tkinter import ttk, messagebox
 import sqlite3
@@ -8,7 +9,10 @@ from utils.styles import (
 )
 from utils.helpers import *
 from utils.validators import *
+
+# Class for Task Management page
 class TaskPage(tk.Frame):
+    # Initialising the tasks page
     def __init__(self, parent, user=None, origin=None):
         super().__init__(parent, bg=BG)
         self.parent = parent
@@ -20,23 +24,25 @@ class TaskPage(tk.Frame):
         self.filter_status = "All"
         self.sort_by = "Due Date"
         self._imgs = []
-        self.setup_layout()
+        self._build()
 
-    def setup_layout(self):
+    # Creates the window
+    def _build(self):
         build_subpage_header(self, "Tasks Manager", self._back, self._imgs)
-
         body = tk.Frame(self, bg=BG)
         body.pack(fill="both", expand=True)
 
-    # MAIN CONTENT MUST BE INSIDE BODY
+    # Sets the main content borders
         self.main_content = tk.Frame(body, bg=BG)
         self.main_content.pack(fill="both", expand=True)
-
         self.render_task_workspace()
+
+    # Goes back to proper dashboard
     def _back(self):
         navigate(self, self.parent, self.origin, self.user)
 
     def render_task_workspace(self):
+        # Clears previous UI before re-render
         clear_frame(self.main_content)
         
         # Action Bar Top Section
@@ -46,6 +52,7 @@ class TaskPage(tk.Frame):
         title_lbl = tk.Label(top_bar, text="Tasks Directory", font=TITLE, fg=PRIMARY, bg=BG)
         title_lbl.pack(side="left", anchor="w")
         
+        # Create a new task button
         add_btn = tk.Button(
             top_bar, text="+ Create Task", font=FONT_BOLD, fg=CARD, bg=PRIMARY,
             activebackground=SECONDARY, activeforeground=CARD, bd=0, relief="flat",
@@ -62,14 +69,14 @@ class TaskPage(tk.Frame):
         self.create_filter_dropdown(filter_bar, "Status:", ["All", "Pending", "In Progress", "Completed"], "filter_status")
         self.create_filter_dropdown(filter_bar, "Sort:", ["Due Date", "Priority Code"], "sort_by")
 
-        # Dynamic Grid Scroll Container
+        # Scroll Container
         canvas_container = tk.Frame(self.main_content, bg=BG)
         canvas_container.pack(fill="both", expand=True)
 
         self.canvas = tk.Canvas(canvas_container, bg=BG, bd=0, highlightthickness=0)
         scrollbar = ttk.Scrollbar(canvas_container, orient="vertical", command=self.canvas.yview)
-        
         self.scroll_frame = tk.Frame(self.canvas, bg=BG)
+        # Keeps scroll region synced with content size
         self.scroll_frame.bind(
             "<Configure>",
             lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all"))
@@ -82,7 +89,7 @@ class TaskPage(tk.Frame):
         scrollbar.pack(side="right", fill="y")
         
         self.canvas.bind("<Configure>", lambda e: self.canvas.itemconfig(self.canvas_window, width=e.width))
-
+        # Loads task data into UI
         self.display_tasks()
 
     def create_filter_dropdown(self, parent, label_text, choices, target_attr):
@@ -92,7 +99,7 @@ class TaskPage(tk.Frame):
         val_var = tk.StringVar(value=getattr(self, target_attr))
         cb = ttk.Combobox(parent, textvariable=val_var, values=choices, state="readonly", width=12)
         cb.pack(side="left", padx=(0, 12))
-        
+        #Refreshes the UI
         def on_change(e):
             setattr(self, target_attr, val_var.get())
             self.display_tasks()
@@ -104,11 +111,12 @@ class TaskPage(tk.Frame):
         self.display_tasks()
 
     def display_tasks(self):
+        # Clears task display area before re-render
         clear_frame(self.scroll_frame)
-
+        # Connects to database
         conn = sqlite3.connect("database/formaly.db")
         cursor = conn.cursor()
-        
+        # Retrieving data from database
         query = "SELECT task_id, title, description, priority, due_date, status FROM tasks WHERE 1=1"
         params = []
 
@@ -132,12 +140,14 @@ class TaskPage(tk.Frame):
         cursor.execute(query, params)
         tasks = cursor.fetchall()
         conn.close()
-
+        
+        # Empty state handling
         if not tasks:
             empty_lbl = tk.Label(self.scroll_frame, text="No matching records tracked.", font=SUBTITLE, fg=SECONDARY, bg=BG)
             empty_lbl.pack(pady=60)
             return
 
+        # Task card rendering
         for task_id, title, desc, priority, due, status in tasks:
             card_border = tk.Frame(self.scroll_frame, bg=BORDER, padx=1, pady=1)
             card_border.pack(fill="x", pady=6)
@@ -157,19 +167,19 @@ class TaskPage(tk.Frame):
             
             meta_bar = tk.Frame(left_section, bg=CARD)
             meta_bar.pack(anchor="w")
-            
+            # Priority badge
             p_color = ERROR if priority == "High" else (SECONDARY if priority == "Medium" else SUCCESS)
             p_badge = tk.Label(meta_bar, text=f" Priority: {priority} ", font=SMALL, fg=CARD, bg=p_color, padx=4)
             p_badge.pack(side="left")
-            
+            # Status badge
             s_color = SUCCESS if status == "Completed" else (PRIMARY if status == "In Progress" else SECONDARY)
             s_badge = tk.Label(meta_bar, text=f" Status: {status} ", font=SMALL, fg=CARD, bg=s_color, padx=4)
             s_badge.pack(side="left", padx=12)
-            
+            # Due date badge
             due_lbl = tk.Label(meta_bar, text=f"Due: {due}", font=SMALL, fg=SECONDARY, bg=CARD)
             due_lbl.pack(side="left")
 
-            # Right Section Interactive Controls Layout
+            # Right Section
             right_section = tk.Frame(card, bg=CARD)
             right_section.pack(side="right", fill="y", padx=(16, 0))
             
@@ -180,21 +190,21 @@ class TaskPage(tk.Frame):
                     command=lambda tid=task_id: self.mark_complete(tid)
                 )
                 done_btn.pack(side="left", padx=4)
-                
+            # Edit task details
             edit_btn = tk.Button(
                 right_section, text="Edit", font=SMALL, fg=CARD, bg=PRIMARY,
                 activebackground=BG, activeforeground=PRIMARY, bd=0, relief="flat", padx=8, pady=4,
                 command=lambda tid=task_id, t=title, d=desc, p=priority, du=due, s=status: self.open_task_modal(tid, t, d, p, du, s)
             )
             edit_btn.pack(side="left", padx=4)
-            
+            # Delete task
             del_btn = tk.Button(
                 right_section, text="Delete", font=SMALL, fg=CARD, bg=ERROR,
                 activebackground=BG, activeforeground=ERROR, bd=0, relief="flat", padx=8, pady=4,
                 command=lambda tid=task_id: self.delete_task(tid)
             )
             del_btn.pack(side="left", padx=4)
-
+    # Updates completion in database
     def mark_complete(self, task_id):
         conn = sqlite3.connect("database/formaly.db")
         cursor = conn.cursor()
@@ -202,7 +212,7 @@ class TaskPage(tk.Frame):
         conn.commit()
         conn.close()
         self.display_tasks()
-
+    # This function deletes the task from the database
     def delete_task(self, task_id):
         if messagebox.askyesno("Confirm Action", "Are you sure you want to remove this task?"):
             conn = sqlite3.connect("database/formaly.db")
@@ -211,10 +221,10 @@ class TaskPage(tk.Frame):
             conn.commit()
             conn.close()
             self.display_tasks()
-
+    # Opens a popup window
     def open_task_modal(self, task_id=None, title="", desc="", priority="Medium", due="", status="Pending"):
         modal = tk.Toplevel(self)
-        modal.title("Task Workspace Data Editor")
+        modal.title("Task Editor")
         modal.geometry("460x520")
         modal.configure(bg=BG)
         modal.transient(self)
@@ -274,14 +284,14 @@ class TaskPage(tk.Frame):
         # Footer Action Control Panel
         actions_panel = tk.Frame(container, bg=BG)
         actions_panel.pack(fill="x", side="bottom", pady=(24, 0))
-
+        # This function saves all changes made to task details to the database
         def save_changes():
             t_val = title_ent.get().strip()
             d_val = desc_txt.get("1.0", "end-1c").strip()
             p_val = p_var.get()
             s_val = s_var.get()
             due_val = due_ent.get().strip()
-
+            # Validation of empty title
             if not t_val:
                 messagebox.showerror("Validation Error", "Title is a required attribute field.")
                 return
@@ -300,7 +310,7 @@ class TaskPage(tk.Frame):
             conn.close()
             modal.destroy()
             self.display_tasks()
-
+        
         submit_btn = tk.Button(
             actions_panel, text="Save Records", font=FONT_BOLD, fg=CARD, bg=PRIMARY,
             activebackground=SECONDARY, activeforeground=CARD, bd=0, relief="flat", padx=16, pady=8,

@@ -60,28 +60,30 @@ class PlaceholderEntry:
         self.fg_ph       = fg_placeholder
         self.show_char   = show_char   # "●" for password fields
         self._active     = True
-
+        #Displaying the placeholder text
         widget.insert(0, placeholder)
         widget.config(fg=fg_placeholder)
+        # Binding focus events to manage the placeholder
         widget.bind("<FocusIn>",  self._on_focus_in)
         widget.bind("<FocusOut>", self._on_focus_out)
-
+    # Removing the placeholder text when the field gains focus
     def _on_focus_in(self, _event=None):
         if self._active:
             self.widget.delete(0, "end")
             self.widget.config(fg=self.fg_normal)
+            # Enabling password masking if required
             if self.show_char:
                 self.widget.config(show=self.show_char)
             self._active = False
-
+    # Restoring the placeholder text when the field is empty
     def _on_focus_out(self, _event=None):
         if self.widget.get().strip() == "":
             self.widget.config(show="", fg=self.fg_ph)
             self.widget.insert(0, self.placeholder)
             self._active = True
-
+    # Returning the entered value
     def get_value(self):
         return "" if self._active else self.widget.get()
-
+    # Checking if the placeholder text is currently displayed
     def is_placeholder(self):
         return self._active

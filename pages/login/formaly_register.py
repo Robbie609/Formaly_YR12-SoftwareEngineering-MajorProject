@@ -187,19 +187,19 @@ class FormalyRegisterApp(tk.Toplevel):
                                    font=FONT_SMALL, wraplength=440)
         self.status_lbl.pack(pady=(8, 0))
 
-    # This function creates a label with some spacing below it, used for the form fields
+    # Creates a label with some spacing below it, used for the form fields
     def _spaced_label(self, parent, text):
         tk.Label(parent, text=text, bg=CREAM, fg=TEXT_MUTED,
                  font=_F_LABEL).pack(pady=(0, 5))
         
-    # This function toggles the visibility of the password field when the eye button is clicked
+    # Toggles the visibility of the password field when the eye button is clicked
     def _toggle_pw(self):
         if self._pw_ph.is_placeholder():
             return
         self._pw_visible = not self._pw_visible
         self._pw_w.config(show="" if self._pw_visible else "●")
 
-    # This function toggles the visibility of the confirm password field when the eye button is clicked
+    # Toggles the visibility of the confirm password field when the eye button is clicked
     def _toggle_cf(self):
         if self._cf_ph.is_placeholder():
             return

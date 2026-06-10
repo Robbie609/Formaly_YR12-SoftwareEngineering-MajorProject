@@ -131,6 +131,7 @@ def make_label(parent, text, style="body", anchor="w", **kw):
         anchor=anchor, **kw
     )
 
+# Creating a styled entry field
 def make_entry(parent, show=None, width=30, **kw):
     return tk.Entry(
         parent,
@@ -141,6 +142,7 @@ def make_entry(parent, show=None, width=30, **kw):
         **kw
     )
 
+#Creating a horizontal seperator
 def make_separator(parent, orient="horizontal", colour=BORDER, thickness=1):
     if orient == "horizontal":
         return tk.Frame(parent, bg=colour, height=thickness)

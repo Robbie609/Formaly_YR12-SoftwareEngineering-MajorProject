@@ -1,3 +1,4 @@
+#Imports
 import tkinter as tk
 import sqlite3
 from database.formaly_database_manager import get_venue_count
@@ -8,33 +9,35 @@ from utils.styles import (
 from utils.widgets import *
 from utils.helpers import *
 
+# Navigation structure for sidebar
 _NAV     = ["Dashboard", "Tasks", "Venues"]
 _NAV_MAP = {"Dashboard": "planner", "Tasks": "tasks", "Venues": "venues"}
 
-
+# Class for Planner dashboard page
 class PlannerDashboard(tk.Frame):
+    # Initialising the planner dashboard
     def __init__(self, parent, controller=None, user=None, origin = None):
         self.parent = parent
         self.user   = user
         self._imgs  = []
         self._build()
         self.origin = "planner"
-
+    # Creates dashboard layout
     def _build(self):
         username = self.user["Username"] if self.user else "Planner"
-
+        # Builds sidebar navigation
         build_sidebar(self, _NAV, "Dashboard",
                       lambda t: navigate(self, self.parent, _NAV_MAP.get(t, t), self.user),self._imgs)
-
+        # Right side dashboard
         right = tk.Frame(self, bg=BG)
         right.pack(side="right", fill="both", expand=True)
-
+        # Top header section
         build_header(right, f"Welcome, {username}", "Planner Dashboard", self._imgs)
-
+        #Main body container
         body = tk.Frame(right, bg=BG)
         body.pack(fill="both", expand=True, padx=22, pady=18)
 
-        # Fetch metrics
+        # Connects to database for task statistics
         conn   = sqlite3.connect("database/formaly.db")
         cur    = conn.cursor()
         cur.execute("SELECT COUNT(*) FROM tasks")
@@ -46,7 +49,7 @@ class PlannerDashboard(tk.Frame):
         conn.close()
         venues = get_venue_count()
 
-        # Stat cards row
+        # Stat cards
         stats_row = tk.Frame(body, bg=BG)
         stats_row.pack(fill="x", pady=(0, 14))
 
@@ -55,19 +58,21 @@ class PlannerDashboard(tk.Frame):
         stat_card(stats_row, "Pending Tasks",   pend,   2, 4)
         stat_card(stats_row, "Venue Options",   venues, 3, 4)
 
-        # Lower row: upcoming tasks (left) + recent venues (right)
+        # Lower dashboard row
         lower = tk.Frame(body, bg=BG)
         lower.pack(fill="both", expand=True)
-
+        # Upcoming tasks on the left
         self._upcoming_card(lower, 0)
+        # Recent venues on the right
         self._venues_card(lower, 1)
-
+    # Creates upcoming tasks panel
     def _upcoming_card(self, parent, col):
         card = tk.Frame(parent, bg=CARD)
         card.pack(side="left",fill="both",expand=True,padx=(0, 8) if col == 0 else (8, 0))
 
         tk.Label(card, text="Upcoming Tasks", bg=CARD, fg=GOLD,
                  font=FONT_H3, anchor="w").pack(fill="x", padx=18, pady=(16, 10))
+        # Divider line
         tk.Frame(card, bg=BORDER, height=1).pack(fill="x", padx=18, pady=(0, 6))
 
         conn = sqlite3.connect("database/formaly.db")
@@ -75,12 +80,12 @@ class PlannerDashboard(tk.Frame):
         cur.execute("SELECT title, priority, due_date FROM tasks WHERE status!='Completed' ORDER BY due_date ASC LIMIT 8")
         tasks = cur.fetchall()
         conn.close()
-
+        # Empty state handling
         if not tasks:
             tk.Label(card, text="No upcoming tasks.", bg=CARD, fg=TEXT_MUTED,
                      font=FONT_BODY).pack(padx=18, pady=20)
             return
-
+        # Task list rendering
         for title, priority, due in tasks:
             row = tk.Frame(card, bg=CARD)
             row.pack(fill="x", padx=18, pady=4)
@@ -90,7 +95,7 @@ class PlannerDashboard(tk.Frame):
                      font=FONT_BODY, anchor="w").pack(side="left")
             tk.Label(row, text=due or "—", bg=CARD, fg=TEXT_MUTED,
                      font=FONT_SMALL, anchor="e").pack(side="right")
-
+    # Creates recent venues panel
     def _venues_card(self, parent, col):
         card = tk.Frame(parent, bg=CARD)
         card.pack(side="left",fill="both",expand=True,padx=(8, 0) if col == 1 else (0, 8))
@@ -104,12 +109,12 @@ class PlannerDashboard(tk.Frame):
         cur.execute("SELECT name, capacity, estimated_cost FROM venues ORDER BY id DESC LIMIT 8")
         venues = cur.fetchall()
         conn.close()
-
+        # Empty state handling
         if not venues:
             tk.Label(card, text="No venues listed.", bg=CARD, fg=TEXT_MUTED,
                      font=FONT_BODY).pack(padx=18, pady=20)
             return
-
+        # Venue list rendering
         for name, cap, cost in venues:
             row = tk.Frame(card, bg=CARD)
             row.pack(fill="x", padx=18, pady=4)

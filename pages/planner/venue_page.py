@@ -1,3 +1,4 @@
+# Imports
 import tkinter as tk
 from tkinter import ttk, messagebox
 import sqlite3
@@ -9,8 +10,9 @@ from utils.styles import (
 from utils.widgets import build_subpage_header, scrollable_frame, make_modal, modal_field, navigate
 from utils.helpers import truncate_text, clear_frame
 
-
+# Class for the Venue Page
 class VenueSuggestionPage(tk.Frame):
+    # Initialising the venue page
     def __init__(self, parent, controller=None, user=None, origin=None):
         super().__init__(parent, bg=BG)
         self.parent = parent
@@ -18,37 +20,39 @@ class VenueSuggestionPage(tk.Frame):
         self._imgs  = []
         self._build()
         self.origin = origin or "planner"
-
+    # Returning to the previous page
     def _back(self):
         navigate(self, self.parent, self.origin, self.user)
-
+    # Creating the attendance page layout
     def _build(self):
-
+        # Creating the page header
         build_subpage_header(self, "VENUE OPTIONS", self._back, self._imgs)
-
+        # Creating the main content area
         body = tk.Frame(self, bg=BG)
         body.pack(fill="both", expand=True)
-
+        # Creating a scrollable window
         self._scroll_inner = scrollable_frame(body)
         self._scroll_inner.columnconfigure((0, 1), weight=1, uniform="eq")
+        # Loads data into the UI
         self._refresh()
 
     def _refresh(self):
         clear_frame(self._scroll_inner)
-
+        # Gets all the venue records from the database
         conn = sqlite3.connect("database/formaly.db")
         cur  = conn.cursor()
         cur.execute("SELECT id, name, address, capacity, estimated_cost, notes, status FROM venues ORDER BY id")
         venues = cur.fetchall()
         conn.close()
-
+        # Empty state handling
         if not venues:
             tk.Label(self._scroll_inner, text="No venues found.", bg=BG, fg=TEXT_MUTED,
                      font=FONT_H3).grid(row=0, column=0, columnspan=2, pady=60)
             return
-
+        # Display each venue as a card
         for idx, (vid, name, addr, cap, cost, notes, status) in enumerate(venues):
             r, c = divmod(idx, 2)
+            # Main card container
             card = tk.Frame(self._scroll_inner, bg=CARD)
             card.grid(row=r, column=c, padx=10, pady=10, sticky="nsew")
 
@@ -73,7 +77,7 @@ class VenueSuggestionPage(tk.Frame):
                      bg=CARD, fg=TEXT_MUTED, font=FONT_SMALL,
                      anchor="w", wraplength=360, justify="left").pack(fill="x", padx=16, pady=(0, 10))
 
-            # Calendar icon placeholder
+            # Calendar feature where they can see other bookings for the venue
             tk.Label(card, text="📅", bg=CARD, font=("Segoe UI Emoji", 28)).pack(anchor="w", padx=16, pady=(0, 8))
 
             # Actions
@@ -94,25 +98,27 @@ class VenueSuggestionPage(tk.Frame):
                                          self._open_modal(vid, n, a, cp, cs, nt, st))
             edit_btn.pack(side="left")
 
+    # Updates status in the database
     def _set_status(self, vid, status):
         conn = sqlite3.connect("database/formaly.db")
         conn.execute("UPDATE venues SET status=? WHERE id=?", (status, vid))
         conn.commit(); conn.close()
         self._refresh()
-
+    
+    # Creates a popup window
     def _open_modal(self, vid=None, name="", addr="", cap=100,
                     cost=0.0, notes="", status="Under Review"):
         m = make_modal(self, "Edit Venue" if vid else "Add Venue", 480, 560)
         f = tk.Frame(m, bg=BG, padx=22, pady=22)
         f.pack(fill="both", expand=True)
-
+        # Basic fields
         n_ent  = modal_field(f, "Name",    name)
         a_ent  = modal_field(f, "Address", addr)
-
+        # Capcity + Cost row
         row = tk.Frame(f, bg=BG)
         row.pack(fill="x", pady=(10, 0))
         row.columnconfigure((0, 1), weight=1)
-
+        # Capacity input
         tk.Label(row, text="Capacity", bg=BG, fg=GOLD, font=FONT_BOLD).grid(row=0, column=0, sticky="w")
         cap_border = tk.Frame(row, bg=BORDER, padx=1, pady=1)
         cap_border.grid(row=1, column=0, sticky="ew", padx=(0, 6), pady=4)
@@ -120,7 +126,7 @@ class VenueSuggestionPage(tk.Frame):
                            insertbackground=TEXT_LIGHT)
         cap_ent.pack(fill="x", padx=6, pady=5)
         cap_ent.insert(0, str(cap))
-
+        # Cost input
         tk.Label(row, text="Estimated Cost", bg=BG, fg=GOLD, font=FONT_BOLD).grid(row=0, column=1, sticky="w")
         cost_border = tk.Frame(row, bg=BORDER, padx=1, pady=1)
         cost_border.grid(row=1, column=1, sticky="ew", padx=(6, 0), pady=4)
@@ -128,24 +134,27 @@ class VenueSuggestionPage(tk.Frame):
                             insertbackground=TEXT_LIGHT)
         cost_ent.pack(fill="x", padx=6, pady=5)
         cost_ent.insert(0, str(cost))
-
+        # Status dropdown
         tk.Label(f, text="Status", bg=BG, fg=GOLD, font=FONT_BOLD, anchor="w").pack(fill="x", pady=(10, 2))
         s_var = tk.StringVar(value=status)
         ttk.Combobox(f, textvariable=s_var,
                      values=["Under Review","Approved","Rejected"],
                      state="readonly").pack(fill="x", pady=(0, 4))
-
+        # Notes field
         nt_ent = modal_field(f, "Notes", notes, height=3)
 
         def _save():
             n = n_ent.get().strip()
+            # Checks if name is inputted
             if not n:
                 messagebox.showerror("Error", "Name is required."); return
+            # Validates Cost and capacity
             try:
                 cp = int(cap_ent.get()); cs = float(cost_ent.get())
             except ValueError:
                 messagebox.showerror("Error", "Capacity must be integer, cost must be number."); return
             nt = nt_ent.get("1.0", "end-1c").strip()
+            # Updates the data
             conn = sqlite3.connect("database/formaly.db")
             cur  = conn.cursor()
             if vid:
@@ -156,7 +165,7 @@ class VenueSuggestionPage(tk.Frame):
                             (n, a_ent.get().strip(), cp, cs, nt, s_var.get()))
             conn.commit(); conn.close()
             m.destroy(); self._refresh()
-
+        # Popup window buttons
         btns = tk.Frame(f, bg=BG)
         btns.pack(fill="x", pady=(14, 0))
         tk.Button(btns, text="Save", bg=GOLD, fg=TEXT_LIGHT, font=FONT_BOLD,
