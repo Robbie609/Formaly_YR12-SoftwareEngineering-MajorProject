@@ -84,12 +84,12 @@ class FormalFeedbackPage(tk.Frame):
         tk.Frame(card, bg=BORDER, height=1).pack(fill="x", padx=24, pady=(10, 14))
 
         # Improvements text area 
-        txt_frame = tk.Frame(card, bg=_FIELD_BG)
-        txt_frame.pack(fill="both", expand=True, padx=24, pady=(0, 16))
+        txt_frame = tk.Frame(card, bg=_FIELD_BG, height=120)
+        txt_frame.pack(fill="x", padx=24, pady=(0, 16))
+        txt_frame.pack_propagate(False)
 
-        self._txt = tk.Text(txt_frame, bg=_FIELD_BG, fg="#888888",
-                            font=FONT_BODY, relief="flat", bd=0,
-                            wrap="word", insertbackground="#333")
+        
+        self._txt = tk.Text(txt_frame, bg=_FIELD_BG, fg="#888888",font=FONT_BODY, relief="flat", bd=0,wrap="word", insertbackground="#333")
         self._txt.pack(fill="both", expand=True, padx=12, pady=10)
 
         # Placeholder text handling
