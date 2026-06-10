@@ -11,7 +11,6 @@ from utils.validators import *
 class TaskPage(tk.Frame):
     def __init__(self, parent, user=None, origin=None):
         super().__init__(parent, bg=BG)
-        self.title("Formaly ~ Tasks")
         self.parent = parent
         self.user = user
         self.origin = origin or "planner"

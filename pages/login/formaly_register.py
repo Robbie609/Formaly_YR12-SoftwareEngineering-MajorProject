@@ -26,7 +26,7 @@ class FormalyRegisterApp(tk.Toplevel):
     # Setting the basic settings of the window
     def __init__(self, parent):
         super().__init__(parent)
-        self.title("Formaly ~ Sign Up")
+        self.title("Formaly")
         self.configure(bg=PANEL_BLACK)
         self.geometry("1200x700")
         self.minsize(960, 600)

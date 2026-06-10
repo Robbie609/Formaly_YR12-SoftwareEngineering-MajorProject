@@ -28,7 +28,7 @@ class FormalyLoginApp(tk.Tk):
     # Setting the basic settings of the window
     def __init__(self, parent=None):
         super().__init__()
-        self.title("Formaly ~ Login")
+        self.title("Formaly")
         self.configure(bg=PANEL_BLACK)
         self.geometry("1200x700")
         self.minsize(960, 600)

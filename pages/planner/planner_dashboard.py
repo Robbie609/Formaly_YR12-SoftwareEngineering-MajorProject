@@ -14,8 +14,6 @@ _NAV_MAP = {"Dashboard": "planner", "Tasks": "tasks", "Venues": "venues"}
 
 class PlannerDashboard(tk.Frame):
     def __init__(self, parent, controller=None, user=None, origin = None):
-        super().__init__(parent, bg=BG)
-        self.title("Formaly ~ Planner")
         self.parent = parent
         self.user   = user
         self._imgs  = []

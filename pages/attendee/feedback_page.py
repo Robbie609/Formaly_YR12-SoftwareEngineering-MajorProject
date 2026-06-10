@@ -17,7 +17,6 @@ _FIELD_BG = "#E8E8E8"   # light grey text area (matches mockup)
 class FormalFeedbackPage(tk.Frame):
     def __init__(self, parent, controller=None, user=None, origin=None):
         super().__init__(parent, bg=BG)
-        self.title("Formaly ~ Feedback")
         self.parent    = parent
         self.user      = user
         self._imgs     = []

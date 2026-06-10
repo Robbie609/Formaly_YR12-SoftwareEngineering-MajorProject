@@ -78,7 +78,7 @@ formaly/
 - Python 3.10 or higher
 
 **Steps**
-1. Step 1
+1. Step 1...
 
 ## Conclusion
 Formaly provides a practical solution to improve how school formal events are planned and managed.
