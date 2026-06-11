@@ -75,12 +75,6 @@ def build_header(parent, title, subtitle, imgs):
     bar = tk.Frame(parent, bg=HDR_BG, height=HEADER_H)
     bar.pack(fill="x")
     bar.pack_propagate(False)
-    try:
-        img = tk.PhotoImage(file="assets/Logo.png")
-        imgs.append(img)
-        tk.Label(bar, image=img, bg=HDR_BG).pack(side="left", padx=(20, 0))
-    except tk.TclError:
-        pass
     mid = tk.Frame(bar, bg=HDR_BG)
     mid.pack(side="left", padx=24, expand=True, fill="both")
     tk.Label(mid, text=title,    bg=HDR_BG, fg=GOLD,       font=FONT_H2,  anchor="w").pack(anchor="w", pady=(28, 0))

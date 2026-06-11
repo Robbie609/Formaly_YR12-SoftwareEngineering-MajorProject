@@ -12,15 +12,13 @@ from utils.styles import (
     FONT_BRAND, FONT_H1, FONT_BODY, FONT_BOLD, FONT_SMALL,
     ROLE_MAP,
 )
-
-# Logo Variable
-LOGO_PATH = "assets/Logo1.png"
-
 # Fonts used
 _F_LABEL  = ("Segoe UI", 9)
 _F_ROLE   = ("Segoe UI", 10, "bold")
 _F_SUBMIT = ("Segoe UI", 12, "bold")
 _F_LINK   = ("Segoe UI", 10)
+
+LOGO_PATH = "assets/Logo1.png"
 
 # Class for the Login Page
 class FormalyLoginApp(tk.Tk):
@@ -41,6 +39,7 @@ class FormalyLoginApp(tk.Tk):
         self.parent        = parent
         self._pw_visible   = False
         self._build()
+
 
     # Setting up the layout of the page with two columns, left for logo and right for login form
     def _build(self):

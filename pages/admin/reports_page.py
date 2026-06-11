@@ -91,8 +91,5 @@ class ReportsPage(tk.Frame):
         fb1 = tk.Frame(fb_row, bg=ENTRY, height=80)
         fb1.pack(side="left", fill="x", expand=True, padx=(0, 8))
         tk.Label(fb1, text=str(feedback_label), bg=ENTRY, fg=TEXT_MUTED,
-                 font=FONT_BODY, wraplength=280,
+                 font=FONT_BODY, wraplength=1000,
                  justify="left").pack(padx=8, pady=8, anchor="w")
-
-        fb2 = tk.Frame(fb_row, bg=ENTRY, height=80)
-        fb2.pack(side="left", fill="x", expand=True, padx=(8, 0))

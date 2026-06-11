@@ -1,6 +1,8 @@
 # Imports
 import tkinter as tk
 from datetime import datetime
+import sys
+import os
 
 # This function centers a tkinter window on the screen by calculating the appropriate x and y coordinates based on the screen size and the desired window size.
 def center_window(window, width, height):
@@ -87,3 +89,4 @@ class PlaceholderEntry:
     # Checking if the placeholder text is currently displayed
     def is_placeholder(self):
         return self._active
+    import os, sys
