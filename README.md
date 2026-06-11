@@ -137,5 +137,20 @@ The installation is successful if:
 Formaly is now fully installed and ready to use.
 Users can log in and begin managing school formal events through the system.
 
+**ACCOUNTS:**
+```text
+ADMIN:
+- Username: Calvin
+- Password: EppingFormal26ADMIN
+
+PLANNER:
+- Username: Rowan
+- Password: #1EBHSPlanner
+
+SUPPORT:
+- Username: Calvin
+- Password: EBHSupport_1
+```
+
 ## Conclusion
 Formaly provides a practical solution to improve how school formal events are planned and managed.
