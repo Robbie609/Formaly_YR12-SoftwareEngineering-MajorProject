@@ -73,12 +73,69 @@ formaly/
 └── README.md
 ```
 
-## 🚀 How to Run the Project
-**Requirements**
-- Python 3.10 or higher
+## 🚀 How to Run Formaly
+**📌 System Requirements**
 
-**Steps**
-1. Step 1...
+Before installing Formaly, ensure your system meets the following requirements:
+```text
+Windows 10 or Windows 11
+Python 3.10 or later
+Visual Studio Code (VS Code)
+At least 100 MB of free storage
+Internet connection (required for initial setup and downloads)
+```
+
+**📥 Required Downloads**
+Before running the application, install the following dependencies:
+
+Download Python from the official website:
+https://www.python.org/downloads/
+
+During installation:
+- Tick Add Python to PATH
+- Then select Install Now
+
+Download VS Code here:
+https://code.visualstudio.com/
+Install using the default settings and complete the setup.
+
+After opening VS Code:
+Go to the Extensions tab
+Search for Python
+Install the extension published by Microsoft
+
+**📂 Project Installation**
+1. Go to the Formaly GitHub repository
+2. Click Code → Download ZIP
+3. Extract the ZIP file to a folder on your computer
+4. Open Visual Studio Code
+5. Select File → Open Folder
+6. Open the extracted Formaly project folder
+
+**▶️ Running Formaly**
+Method 1 (Recommended)
+- Open main.py in Visual Studio Code
+- Click Run Python File (top-right corner)
+
+Method 2 (Terminal)
+- Open the VS Code terminal and run:
+```text
+python main.py
+```
+- The Formaly login screen should now appear.
+
+**✅Verifying Installation**
+
+The installation is successful if:
+
+- The application launches without errors
+- The login screen appears correctly
+- Navigation between pages works properly
+- Data can be added, edited, and retrieved successfully
+
+**🎉 Installation Complete**
+Formaly is now fully installed and ready to use.
+Users can log in and begin managing school formal events through the system.
 
 ## Conclusion
 Formaly provides a practical solution to improve how school formal events are planned and managed.
